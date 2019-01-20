@@ -1,6 +1,49 @@
 # Project Management
-## Agile Ontwikkeling {#agile_ontwikkeling}
+## Project Management Systeem {#management_system}
+Het projectmanagement systeem dat gebruikt wordt voor dit project is Azure Devops. Azure Devops, ook wel bekend onder de naam Visual Studio Online, is ontwikkeld door Microsoft.
+
+Azure Devops biedt verschillende services aan die helpen bij het managen van het project.
+De volgende services worden gebruikt voor het managen van dit project.
+
+###### Azure Boards
+Azure Boards is het eigenlijke projectmanagement systeem van Azure Devops. Gebruikers kunnen hier features, user story's en verschillende andere work items aan de backlog toevoegen.
+Aan de user story's kunnen taken worden toegevoegd. Deze taken moeten afgewerkt worden om ervoor te zorgen dat user story als compleet te beschouwen.
+Met Azure Boards kunnen sprints gepland en opgevolgd worden.
+
+###### Azure Repos
+Azure Repos is de git repository geïntegreerd in Azure Devops. Azure Repos biedt een manier aan om code reviews uit te voeren op pull requests.
+
+###### Azure Pipelines
+Met Azure pipelines kan de continue integratie en continue implementatie van het project worden geautomatiseerd.
+Deze pipelines kunnen worden geconfigureerd zodat het builden en het releasen van het project automatisch gebeurd.
+
+Azure Devops zorgt voor een nauwe samenwerking tussen deze drie services.
+Aan user story's kunnen feature- of bugfix branches worden gehangen. Door de nummer van een work item te vermelden in een commit message, kunnen de commit's gelinkt worden aan specifieke taken die bij een user story horen.
+Wanneer er een pull request wordt gecreëerd voor een branch, worden de gelinkte work items getoond.
+Bij elke pull request kan commentaar gezet worden met een korte verwijzing naar de code. Wanneer er dan aanpassingen in dat gedeelte van de code komen, wordt er in de pull request een vergelijking getoond tussen de oude code en de geüpdatete code.
+Wanneer de feature afgewerkt is en de pull request gemerged wordt, worden de work items en user story's, die gelinkt waren aan de branch, automatisch afgesloten.
+De Azure Pipelines worden geconfigureerd zodat ze automatisch builden en releasen zodra er nieuwe code wordt gepushed op een branch.
+
 ## Source Controle {#source_controle}
+Dit is een gedetailleerde beschrijving van het source controle systeem toegepast in dit project.
+
+Voor elke user story die gepland is in een sprint wordt er een branch gecreëerd met het formaat: feature/(nummer en naam van de user story).
+
+Commits die gebeuren op de feature branches gebeuren moeten in hun message een nummer meekrijgen. Deze nummers komen overeen met de taken van een user story.
+
+Voor elke branch wordt er een pull request gecreëerd. De stagaires en stagementor reviewen de code in de pull request. Wanneer de user story afgewerkt is, en de code is gecontroleerd en goedgekeurd op zijn kwaliteit, kan de pull request gemerged worden.
+
+Voor het mergen worden alle commits op de branch gesquashed tot één commit.
+Dit zorgt ervoor dat elke feature als één commit op de master branch terechtkomt
+
+## Agile Ontwikkeling {#agile_ontwikkeling}
+Het project is ontwikkeld volgens de Agile Development. Wekelijks wordt er samengezeten met de stagementor voor de sprint retrospective en de sprint planning.
+
+De sprint retrospective begint altijd met een demo van de applicatie zoals ze draait op de acceptatie omgeving. Alle functionaliteit die in de voorbije sprint is toegevoegd wordt getoond.
+Er wordt besproken hoe de sprint verlopen is. Er wordt tijd gemaakt om te bespreken wat er niet goed is verlopen, maar ook wat er wel goed is verlopen. Ook wordt er aangehaald wat er verbeterd kan worden met zicht op de komende sprint.
+
+Tijdens de sprintplanning wordt er bepaald welke user stories de komende week worden opgenomen. De user stories worden ingeschat met story points en vervolgens verdeeld naar gelang het aantal story points.
+
 ## Projectstructuur {#projectstructuur}
 ### Client-side
 #### Structuur
@@ -101,16 +144,18 @@ Als het deployen naar de testomgeving geslaagd is, kunnen er client-side integra
 
 ## Persistence {#persistence}
 
-Fluent migrations
 De migraties van de databank worden uitgevoerd met behulp van Fluent Migrator. Fluent Migrator is een framework ontwikkeld voor .NET en .NET Core. Het staat toe om, op een gestructureerde en heldere manier, database schema’s aan te passen en te creëren. De migraties worden beschreven in klasses, geschreven in C#.
-Er zijn twee redenen waarom de voorkeur uit ging naar Fluent Migrator boven de Code First Migrations van Entity Framework zelf. 
+Er zijn twee redenen waarom de voorkeur uit ging naar Fluent Migrator boven de Code First Migrations van Entity Framework zelf.
+
 In het project is er een .NET Core console applicatie aanwezig dat ervoor zorg dat de migraties worden uitgevoerd. De console applicatie aanvaard een connectionstring van een databank als argument.
 De console applicatie wordt ook gebruikt om de lokale databank en de databank op de testserver, te seeden met testdata. Fluent Migrator laat het toe om via de runner SQL-query’s uit te voeren op de databank.
+
 In de build pipeline wordt de console applicatie gebuild. De DLL-bestanden die het resultaat zijn van de build worden gekopieerd naar het build artifact. In de release pipeline worden de connectionstrings van de databanken opgeslagen. De migraties worden in de release planning als eerste stap uitgevoerd. Via een command line script in de wordt de console applicatie uitgevoerd, met de juist connectionstring verworven uit de release pipeline.
 
 ## Lokale Ontwikkelingsomgeving {#lokale_ontwikkelingsomgeving}
-Local scripts
-Nadat wij gestopt zijn met werken aan de applicatie, wil Involved dat er nog verder ontwikkeld kan worden aan de applicatie. Daarom zijn er, op vraag van de opdrachtgever, enkele scripts gecreëerd die helpen bij het opzetten van de lokale ontwikkelingsomgeving.
+Als er nieuwe ontwikkelaars aan het project beginnen werken, moet ervoor gezorgd worden dat zij op een vlotte manier kunnen start.
+Daarom zijn er enkele scripts gecreëerd die helpen bij het opzetten van de lokale ontwikkelingsomgeving.
+
 Iemand die de repository clonet, kan het bash script: build.sh uitvoeren. Dit script zorgt ervoor dat dat de API, scheduler en angular projecten worden gebuild met dotnet en npm. Er wordt een database gecreëerd op de lokale SQL-server en de console applicatie die de migraties van de database afhandelt wordt gebuild en gerund.
 
 [^1]: *Tree shaking* is een term die, in de context van JavaScript, gebruikt wordt om het elimineren van dode code te beschrijven. Ongebruikte modules worden tijdens het buildproces niet gebundeld door *tree shaking* (Bachuk, 2017).
