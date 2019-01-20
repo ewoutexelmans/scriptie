@@ -30,12 +30,14 @@ Het juiste design voor het project werd gekozen na evaluatie van de vereisten va
  
 **Project vereisten**: hier worden de concrete verwachtingen van het project op in brede lijnen opgesomd, gedetailleerde feature-vereisten zullen bij 'requirements' opgelijst worden.
  
-* De applicatie moet over een database beschikken.
-* De applicatie moet met de database integreren.
-* De applicatie moet met interne business logica de databases wijzigen zoals nodig.
-* De applicatie moet toegang voorzien tot deze business logica via API interfaces.
-* De applicatie moet integreren met Slack API.
-* De applicatie moet via de Slack integratie de chatbot op tijdschema's kunnen aansturen.
+ De applicatie moet:
+
+* Over een database beschikken.
+* met de database integreren.
+* met interne business logica de databases wijzigen zoals nodig.
+* toegang voorzien tot deze business logica via API interfaces.
+* integreren met Slack API.
+* via de Slack integratie de chatbot op tijdschema's kunnen aansturen.
  
 **Hergebruik en toekomstige ontwikkeling**: vanuit de beschrijving en besprekingen met Involved werd er afgesproken dat het project moet worden aangezien als iets wat mogelijk nog verder wordt ontwikkeld, of waarvan delen zullen hergebruikt worden.
  
@@ -47,9 +49,9 @@ Bij CQRS worden lees-acties (*queries*) en schrijf-acties (*commands*) gescheide
  
 Bij data-driven API Composition wordt er een soort van 'API gateway' geïmplementeerd in het backend systeem welke automatisch een reeks RESTful APIs bundelt en beschikbaar maakt op één portal aan externe consumenten. Dit is een vrij arbeidsintensief proces waar betrokken ontwikkelaars manueel de data modellen van alle kandidaat API's moet bekijken, de bijbehorende concepten matchen, een nieuw globaal model opstellen en deze publiceren. Eén opkomend praktische uitvoering hiervan is het bundelen van meerdere gepubliceerde Web APIs van bedrijven of regeringen om nieuwe informatie te genereren en publiceren. (Ed-douibi, H. 2018)
  
-**Conclusie:** daar hier gewerkt wordt met een ‘agile’ manier van ontwikkeling, en design patronen vaak pas worden geïmplementeerd na het herhaaldelijk tegenkomen van een probleem (design patronen zijn ideaal om te implementeren bij ‘refactoring’, in tegenstelling tot de core architectuur van het project), kunnen niet vooraf alle design patronen worden bepaald. Echter kan wel de conclusie gevormd worden dat voor het grondwerk een **loosely-coupled microservice-architectuur** het voordeligst is, dit met de 'losse' stukken vereiste functionaliteit in acht genomen: zij kunnen immers afgesplitst worden van het project (bv. als een ander project slack integratie nodig heeft, kan onze implementatie gemakkelijk hergebruikt worden).Om loose coupling te helpen bereiken in een project, kunnen we het dependency injection patroon gebruiken. Voor de concrete implementatie wordt er voorlopig gekozen voor de dependency injection container van .NET Core zelf, om in het begin het aantal externe afhankelijkheden laag te houden, en omdat .NET Core out-of-the-box het DI patroon volledig ondersteunt. (Smith, S. Addie, S. Latham, L. 2018) Een voorbeeld van een bibliotheek die dit ook kan oplossen is **Autofac**, welke voornamelijk uitgebreidere levensduur opties toelaat voor de afhankelijkheden, maar deze wordt bij het moment van schrijven als niet nodig geacht daar wij onze afhankelijkheden alleen per verzoek hoeven te injecteren.
+**Conclusie:** daar hier gewerkt wordt met een ‘agile’ manier van ontwikkeling, en design patronen vaak pas worden geïmplementeerd na het herhaaldelijk tegenkomen van een probleem (design patronen zijn ideaal om te implementeren bij ‘refactoring’, in tegenstelling tot de core architectuur van het project), kunnen niet vooraf alle design patronen worden bepaald. Echter kan wel de conclusie gevormd worden dat voor het grondwerk een **loosely-coupled microservice-architectuur** het voordeligst is, dit met de 'losse' stukken vereiste functionaliteit in acht genomen: zij kunnen immers afgesplitst worden van het project (bv. als een ander project slack integratie nodig heeft, kan onze implementatie gemakkelijk hergebruikt worden). Om loose coupling te helpen bereiken in een project, kunnen we het dependency injection patroon gebruiken. Voor de concrete implementatie wordt er voorlopig gekozen voor de dependency injection container van .NET Core zelf, om in het begin het aantal externe afhankelijkheden laag te houden, en omdat .NET Core out-of-the-box het DI patroon volledig ondersteunt. (Smith, S. Addie, S. Latham, L. 2018). Een voorbeeld van een bibliotheek die dit ook kan oplossen is **Autofac**, welke voornamelijk uitgebreidere levensduur opties toelaat voor de afhankelijkheden, maar deze wordt bij het moment van schrijven als niet nodig geacht daar wij onze afhankelijkheden alleen per verzoek hoeven te injecteren.
  
-Verder zal er als oplossing om overzicht en structuur te behouden in de verschillende vormen van communicatie en data sources in de applicatie gebruik gemaakt worden van CQRS. Het vormt een meer rechtstreekse oplossing voor de voorgestelde problemen in dit project, en de meer abstracte manier van werken via de Slack-integratie kan beter geïmplementeerd worden in deze vorm dan wanneer er getracht wordt ze op te nemen in een samengestelde API portal volgens de werkwijze van API Composition. De gekozen technologie om dit design te helpen implementeren is MediatR. MediatR is op zich een implementatie van het mediator design patroon, een zogenoemde ‘event-driven pattern’ waar een extra ‘service layer’ interacties toelaat tussen objecten in de applicatie en dusdanig de nood om van elkaars bestaan af te weten vermindert. Dat brengt meteen het grote voordeel van deze applicatie met zich mee, namelijk dat het nog eens in grote mate de loose-coupling ervan bevordert. (Powell-Morse, A. 2017) De werkwijze van MediatR laat ons dan ook toe om een gemakkelijkere gebruik van CQRS te bereiken. Het design van MediatR centreert zich rond zogenoemde 'handlers', die in de business/domain layer van onze applicatie kunnen aangeroepen worden door berichten vanuit een presentatie layer (dit gebruik en aanroepen van handlers vormt dan samen de onzichtbare ‘service layer’ van MediatR). Dit is een ideale werkwijze om CQRS op een overzichtelijke manier te implementeren en commands en queries gescheiden te houden. (Gordon, S. 2016)
+Verder zal er als oplossing om overzicht en structuur te behouden in de verschillende vormen van communicatie en data sources in de applicatie gebruik gemaakt worden van CQRS. Het vormt een meer rechtstreekse oplossing voor de voorgestelde problemen in dit project, en de meer abstracte manier van werken via de Slack-integratie kan beter geïmplementeerd worden in deze vorm dan wanneer er getracht wordt ze op te nemen in een samengestelde API portal volgens de werkwijze van API Composition. De gekozen technologie om dit design te helpen implementeren is MediatR. MediatR is op zich een implementatie van het mediator design patroon, een zogenoemde ‘event-driven pattern’ waar een extra ‘service layer’ interacties toelaat tussen objecten in de applicatie en dusdanig de nood om van elkaars bestaan af te weten vermindert. Dat brengt meteen het grote voordeel van deze applicatie met zich mee, namelijk dat het nog eens in grote mate de loose-coupling ervan bevordert. (Powell-Morse, A. 2017). De werkwijze van MediatR laat ons dan ook toe om een gemakkelijkere gebruik van CQRS te bereiken. Het design van MediatR centreert zich rond zogenoemde 'handlers', die in de business/domain layer van onze applicatie kunnen aangeroepen worden door berichten vanuit een presentatie layer (dit gebruik en aanroepen van handlers vormt dan samen de onzichtbare ‘service layer’ van MediatR). Dit is een ideale werkwijze om CQRS op een overzichtelijke manier te implementeren en commands en queries gescheiden te houden. (Gordon, S. 2016).
  
 ## Databank {#db}
  
@@ -59,7 +61,7 @@ Verder zal er als oplossing om overzicht en structuur te behouden in de verschil
  
 ![Tweede versie Database Model Mock](../../img/DatabaseModelMockv2.png)
 
-*Fig. 1: Tweede versie database model mock*
+*Fig. 1: Conceptuele database model mock*
  
 ## Requirements {#req}
  
@@ -68,15 +70,15 @@ Hier wordt bij de analyse de reeks technische benodigdheden in de vorm van verwa
 * Het beheren van medewerkers via een client applicatie (toevoegen, opvragen, verwijderen, aanpassen).
 * Het beheren van technologieën via een client applicatie (toevoegen, opvragen, verwijderen, aanpassen).
 * Een slackbot applicatie dat via een slack workspace volgende functionaliteit kan toepassen:
-** Vragen aan relevante werknemers waar hun huidige werkplaats is, en antwoorden hierop verwerken.
-** Vragen aan relevante werknemers met welke technologieën hij of zij werkt, en antwoorden hierop verwerken.
-** Op een slimme wijze antwoorden groeperen: bv. aNgulr wordt Angular.
-** Ja/Nee vragen stellen aan medewerkers: bv. 'Heeft u al eens met technologie X gewerkt?' en antwoorden accepteren op basis van de selectiekeuze.
+  * Vragen aan relevante werknemers waar hun huidige werkplaats is, en antwoorden hierop verwerken.
+  * Vragen aan relevante werknemers met welke technologieën hij of zij werkt, en antwoorden hierop verwerken.
+  * Op een slimme wijze antwoorden groeperen: bv. aNgulr wordt Angular.
+  * Ja/Nee vragen stellen aan medewerkers: bv. 'Heeft u al eens met technologie X gewerkt?' en antwoorden accepteren op basis van de selectiekeuze.
 * Lijsten tonen van alle medewerkers en hun technologieën, en technologieën met hun relevante medewerkers.
 * Deze data kunnen tonen in andere vormen, zoals een geïntegreerde heatmap.
  
-Bijkomend worrden er nog requirements opgelijst voor de oplevering van de app:
+Bijkomend worden er nog requirements opgelijst voor de oplevering van de app:
  
 * De applicatie moet i18n (internationalisatienorm) ondersteunen.
-* Er moet een test, acceptatie en productieomgeving zijn.
+* Er moet een test-, acceptatie- en productie-omgeving zijn.
 * Naar deze omgevingen worden updates automatisch gepushed via een continuous integration pipeline, het stagebedrijf gebruikt Azure DevOps (bij start van dit project nog bekend als 'VSTS') en dus dient deze integratie hieronder te gebeuren.

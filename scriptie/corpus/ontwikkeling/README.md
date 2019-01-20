@@ -58,7 +58,7 @@ waar geldt:
  
 Het initiële bijbehorende domeinmodel is dan een simpele klasse met alle nodige properties als C# properties met een public ‘get’ maar private ‘set’ (dit omdat het rechtstreekse schrijven naar domeinmodellen volledig afgescheiden dient te zijn van buitenaf), gekoppeld aan een  constructor die de vereiste properties beschikbaar maakt voor de aanmaaklogica.
  
-Voor het ‘mappen’ van de tabellen naar Entity Framework, is het gebruik van Data Annotations vermeden aangezien dit het ‘Separation of Concerns’-principe zou schenden, eerder vernoemd onder sectie Analyse -> Design database. Ook de standaard functie 'OnModelCreating' van de Entity Framework DatabaseContext klasse wordt vermeden daar dit vlug te groot en onoverzichtelijk zou worden met de evolutie van de applicatie. Het mappen gebeurt door middel van aparte files, georganiseerd per Entity Model / Database tabel, bij het opvragen van de Entity Framework ‘IEntityTypeConfiguration’-interface.
+Voor het mappen van de tabellen naar Entity Framework, is het gebruik van Data Annotations vermeden aangezien dit het ‘Separation of Concerns’-principe zou schenden, eerder vernoemd onder sectie Analyse -> Design database. Ook de standaard functie 'OnModelCreating' van de Entity Framework DatabaseContext klasse wordt vermeden daar dit vlug te groot en onoverzichtelijk zou worden met de evolutie van de applicatie. Het mappen gebeurt door middel van aparte files, georganiseerd per Entity Model / Database tabel, bij het opvragen van de Entity Framework ‘IEntityTypeConfiguration’-interface.
  
  
 ```cs
@@ -82,7 +82,7 @@ public class GetAllEmployeesResponse
 }
 ```
  
-Een voor gedefinieerde response, het verwachte antwoord dat de handler zal terugsturen naar de aanroepende code.
+Een vooraf gedefinieerde response, het verwachte antwoord dat de handler zal terugsturen naar de aanroepende code.
  
 ```cs
 public class GetAllEmployeesRequest : IRequest<GetEmployeesByLocationResponse>
@@ -147,27 +147,27 @@ Voor het publiceren van de aangemaakte API endpoints, is er gebruik gemaakt van 
 ![Screenshot van swagger documentatie](../../img/EmployeeApiSwagger.png)
 *Fig. 2 Gegenereerde swagger documentatie van Employee Controller*
 
-Verder kan er dan ook frontend code gegenereerd worden uit deze swagger.json bestand. Deze werking zal later toegelicht worden.
+Verder kan er dan ook frontend code gegenereerd worden uit dit swagger.json bestand. Deze werking zal later toegelicht worden.
 
 ### Formulier nieuwe werknemer {#medewerkerform}
 
-Als tweede concrete feature is er de mogelijk toegevoegd tot het manueel toevoegen van een nieuwe werknemer. Dit zou de eerste schrijf-operatie worden en ging dus ook validatie logica nodig hebben (er kan tenslotte niet zomaar van elke API call eender welke data geaccepteerd worden). Data validatie gebeurt op 2 niveaus: op de web service (waar een niet-geslaagde validatie een web response geeft) en in het domein (waar een niet valide staat een interne server error zal geven).
+Als tweede concrete feature is er de mogelijk toegevoegd tot het manueel toevoegen van een nieuwe werknemer. Dit zou de eerste schrijf-operatie worden en ging dus ook validatie logica nodig hebben (er kan tenslotte niet zomaar van elke API call eender welke data geaccepteerd worden). Data validatie gebeurt op 2 niveaus: op de web service (waar een niet-geslaagde validatie een web response geeft) en in het domein (waar een niet valide staat een interne server error zal produceren).
 
-**Web Service**: Er zijn 3 validatie services voorzien, geïmplementeerd als static klasses die we aanroepen in de [HttpPost] Task:
-* Een geboortedatum validator, welke op formaat controleert (dd/mm/yyyy) gebaseerd op DateTime
-* Een email validator, welke op formaat controleert (naam@email.domein) gebaseerd op een Regex met acceptabele tekens
+**Web Service**: Er zijn 3 validatie services voorzien, geïmplementeerd als statische klasses die we aanroepen in de [HttpPost] Task:
+* Een geboortedatum validator, welke op formaat controleert (dd/mm/yyyy) gebaseerd op DateTime.
+* Een email validator, welke op formaat controleert (naam@email.domein) gebaseerd op een Regex met acceptabele tekens.
 * Een naam validator, welke op aanwezigheid van een naam controleert (= niet leeg of null).
 
 **Domein**: Om het proces van toevoegen in gang te zetten, moet er een nieuw Employee object geconstrueerd worden. Deze constructor bevat volgende validaties:
-* Naam: mag niet null zijn (anders -> ArgumentNullException(nameof(name)))
+* Naam: mag niet null zijn (anders -> `ArgumentNullException(nameof(name))`)
 * Email: mag niet null zijn, en nog een interne formatteringsvalidatie tegen een Regex
 * Birthdate: mag niet null zijn
 
-**Domein Handler**: Als laatste validatie gebeurt er in de business logica een duplicaat check met LINQ syntax. Het tabel 'employees' van de databasecontext wordt eerst doorzocht op een bestaande record met identieke naam EN email (een werknemer mag dezelfde naam of email hebben). Indien duplicaat, loggen we een error met de nodige informatie (naam + email + companyId).
+**Domein Handler**: Als laatste validatie gebeurt er in de business logica een duplicaat check met LINQ syntax. Het tabel 'employees' van de huidige database context wordt eerst doorzocht op een bestaande record met identieke naam **en** email (een werknemer mag dezelfde naam of email hebben). Indien duplicaat, loggen we een error met de nodige informatie (naam + email + companyId).
 
-Als deze validatie succesvol plaatsvindt, mag de toevoeging van een werknemer pas plaatsvinden. Er zal soortgelijke uitgebreide validatie uitgevoerd worden voor schrijf operaties waar sprake is van gebruik van formulieren, uit het principe van nooit zomaar client input te vertrouwen. De eigenlijke toevoeging gebeurt vanuit het perspectief van het bedrijf: eerst zoeken we deze op met de contextuele companyId, waarop in dit Company object de nieuwe werknemer aan de collectie 'Employees' toegevoegd wordt, welke zich dan via Entity Framework (na een aanroep naar context.SaveChanges) ook zal vertalen naar de nodige database operatie.
+Wanneer deze validatie succesvol plaatsvindt, mag de toevoeging van een werknemer pas plaatsvinden. Er zal soortgelijke uitgebreide validatie uitgevoerd worden voor schrijf operaties waar sprake is van gebruik van formulieren, uit het principe van nooit zomaar client input te vertrouwen. De eigenlijke toevoeging gebeurt vanuit het perspectief van het bedrijf: eerst zoeken we deze op met de contextuele companyId, waarop in dit Company object de nieuwe werknemer aan de collectie 'Employees' toegevoegd wordt, welke zich dan via Entity Framework (na een aanroep naar `context.SaveChanges`) ook zal vertalen naar de nodige database operatie.
 
-Bij de ontwikkeling van deze feature is al reeds een refactor toegepast. In het initiële domein model werd er nog over een eigenschap 'Age' gesproken bij een employee, maar dit is veranderd geweest naar 'Birthdate' waarvan we eventueel de leeftijd kunnen afleiden. Dit was één van de eerste van vele refactors dat de agile manier van werken kenmerkt. Ook de duplicaat validatie is eigenlijk in de volgende iteratie geïmplementeerd geweest.
+Bij de ontwikkeling van deze feature is al reeds een refactor toegepast. In het initiële domein model werd er nog over een eigenschap 'Age' gesproken bij een employee, maar dit is veranderd geweest naar 'Birthdate' waarvan we eventueel de leeftijd kunnen afleiden. Dit was één van de eerste van vele refactors dat de agile manier van werken kenmerkt. Ook de duplicaat validatie is eigenlijk in de volgende iteratie geïmplementeerd geweest maar werd hier voor volledigheid beschreven.
 
 ### CSV Upload {#csv}
 
@@ -181,7 +181,7 @@ Slechts als de lijst gevalideerd is zal er een request worden gemaakt om een lij
 
 ### Deactiveren van werknemers {#Delete}
 
-Bij deze stap werd er de mogelijkheid tot 'verwijderen' van employees toegevoegd. Praktisch passen we dit toe met de toevoeging van een 'IsActive' vlag in het domein model, welke standaard op True staat en bij gebruik van deze functie op False wordt gezet. Om de gewenste werking te bekomen werd dan ook de reeds bestaande GetAllEmployees functionaliteit aangepast op domein niveau om alleen employees die actief staan mee te geven. Een eigenlijke de-activatie gebeurt dan via een simpele RESTful web service met een employeeId parameter die deze doorgeeft aan zijn respectieve domein handler, waarin de employee opgehaald wordt en zijn IsActive eigenschap op False word gezet.
+Bij deze stap werd er de mogelijkheid tot 'verwijderen' van employees toegevoegd. Praktisch passen we dit toe met de toevoeging van een 'IsActive' vlag in het domein model, welke standaard op True staat en bij gebruik van deze functie op False wordt gezet. Om de gewenste werking te bekomen werd dan ook de reeds bestaande functionaliteit om alle werknemers op te halen aangepast op domein niveau om alleen employees die actief staan mee te geven. Een eigenlijke de-activatie gebeurt dan via een simpele RESTful web service met een employeeId parameter die deze doorgeeft aan zijn respectieve domein handler, waarin de employee opgehaald wordt en zijn IsActive eigenschap op False wordt gezet.
 
 ### Slack Integratie {#slack}
 
@@ -208,9 +208,9 @@ De manieren waarop de requests worden afgehandeld, komt in andere secties van de
 
 ### Werking scheduler & eerste bevraging {#scheduler}
 
-De eerste feature in betrekking tot de chatbot van deze applicatie is het systematisch bevragen van de werknemers in hun Slack workspace over hun huidige werkplaats op een bepaald tijdsschema (Elke eerste maandag van de maand om 15:00). Praktisch is dit toegepast met het gebruik van Hangfire: een .NET framework voor het opzetten van (onder andere) herhalende taken. Deze worden dan als persistente data mee opgeslagen in de SQL server. Hangfire voorziet ook een grafische dashboard dat kan bezocht worden op de server waar de aangemaakte jobs kunnen bekeken en manueel getriggerd worden (zeer nuttig voor testing doeleinden).
+De eerste feature in betrekking tot de chatbot van deze applicatie is het systematisch bevragen van de werknemers in hun Slack workspace over hun huidige werkplaats op een bepaald tijdsschema (elke eerste maandag van de maand om 15:00). Praktisch is dit toegepast met het gebruik van Hangfire: een .NET framework voor het opzetten van (onder andere) herhalende taken. Deze worden dan als persistente data mee opgeslagen in de SQL server. Hangfire voorziet ook een grafische dashboard dat kan bezocht worden op de server waar de aangemaakte jobs kunnen bekeken en manueel getriggerd worden (zeer nuttig voor testing doeleinden).
 
-Als deel van de design van het project is Hangfire geïmplementeerd in een eigen projectfile Involved.BrainChain.Scheduler. In plaats van elke nieuwe job manueel toe te voegen, is er om jobs automatisch te registreren een custom JobRegistrator klasse geschreven geweest, welke via het type assembly zoekt voor implementaties van het hangfire IJob interface en deze automatisch gevonden jobs aan de recurringJobManager van Hangfire toevoegd.
+Als deel van het design van het project is Hangfire geïmplementeerd in een eigen projectbestand Involved.BrainChain.Scheduler. In plaats van elke nieuwe job manueel toe te voegen, is er om jobs automatisch te registreren een JobRegistrator klasse geschreven geweest, welke via het type assembly zoekt voor implementaties van het hangfire IJob interface en deze automatisch gevonden jobs aan de recurringJobManager van Hangfire toevoegd.
 
 De eerste job, om werknemers te bevragen over hun werkplaats, zag er dan zo uit:
 
@@ -239,7 +239,7 @@ namespace Involved.BrainChain.Scheduler.Jobs
 
 Hier valt op te merken:
 
-* De job is gedecoreerd met een zogenoemde CRON-notatie. IntervalAttribute is een custom geschreven implementatie van Attribute om deze notatie met de jobs mee te geven naar Hangfire, welke deze weet te interpreteren. Zie [hier](https://crontab.guru/) [^1] voor een voorbeeld van een site waar cron notaties kunnen gevormd worden. Het merkbare nadeel hier is dat dit op zich niet heel leesbaar is in de code zonder de betekenis op te zoeken.
+* De job is gedecoreerd met een zogenoemde CRON-notatie. `IntervalAttribute` is een custom geschreven implementatie van `Attribute` om deze notatie met de jobs mee te geven naar Hangfire, welke deze weet te interpreteren. Zie [hier](https://crontab.guru/) [^1] voor een voorbeeld van een site waar cron notaties kunnen gevormd worden. Het merkbare nadeel hier is dat dit op zich niet leesbaar is in de code zonder de betekenis op te zoeken.
 * Ook hier wordt de koppeling naar het domein volgens het zelfde principe als de andere microservices geïmplementeerd: loosely-coupled via MediatR.
 
 Het Hangfire dashboard in de huidige acceptatie omgeving ziet deze job er als volgt uit:
@@ -248,7 +248,7 @@ Het Hangfire dashboard in de huidige acceptatie omgeving ziet deze job er als vo
 
 *Fig 3. Hangfire dashboard van de scheduler op acceptatie*
 
-Wanneer deze job dan getriggerd wordt, gebeurt de invocatie van de geassocieerde domein handler. Deze bevat logica om eerst alle werknemers van het bedrijf uit de database te halen, en vervolgens ze allemaal iteratief een bericht te sturen via een vraag. Deze berichten sturen gebeurt via een zelfgeschreven 'SlackClient', een klasse die we beschikbaar stellen als injecteerbare interface ISlackClient die http calls naar het Slack API beschikbaar stelt. De gebruikte httpClient in SlackClient is voorgeconfigureerd in Startup.cs met het autorisatie token om met de relevante workspace slackbot te kunnen verbinden (opgeslagen in appsettings.json), om communicatie mogelijk te maken via de chatbot.
+Wanneer deze job dan getriggerd wordt, gebeurt de invocatie van de geassocieerde domein handler. Deze bevat logica om eerst alle werknemers van het bedrijf uit de database te halen, en vervolgens ze allemaal iteratief een bericht te sturen via een vraag. Deze berichten sturen gebeurt via een zelfgeschreven `SlackClient`, een klasse die we beschikbaar stellen als injecteerbare interface `ISlackClient` die http calls naar het Slack API beschikbaar stelt. De gebruikte `httpClient` in `SlackClient` is voorgeconfigureerd in `Startup.cs` met het autorisatie token om met de relevante workspace slackbot te kunnen verbinden (opgeslagen in appsettings.json), om communicatie mogelijk te maken via de chatbot.
 
 ```cs
 services.AddHttpClient<SlackClient>(c =>
@@ -259,7 +259,7 @@ services.AddHttpClient<SlackClient>(c =>
 });
 ```
 
-Deze SlackClient voorziet dan de verschillende nodige functies van de slackbot en formatteert berichten, waar we in dit geval als eerste 'chat.postMessage' [^2] toepassen om de opgehaalde lijst gebruikers af te gaan en hen privé berichten te sturen met de vraag. We verzamelen overigens de pogingen in een array van booleans om bij te houden welke werknemers kunnen bereikt worden, en welke niet (Fout slackId, niet meer in dienst,...). Deze business logica binnenin de handler ziet in zijn implementatie er als volgt uit:
+Deze SlackClient voorziet dan de verschillende nodige functies van de slackbot en formatteert berichten, waar we in dit geval als eerste 'chat.postMessage' [^2] toepassen om de opgehaalde lijst gebruikers af te gaan en hen privé berichten te sturen met de vraag. We verzamelen overigens de pogingen in een array van booleans om bij te houden welke werknemers kunnen bereikt worden, en welke niet (Fout slackId, niet meer in dienst...). Deze business logica binnenin de handler ziet in zijn implementatie er als volgt uit:
 
 ```cs
 var employees = await _context.Employees.ToListAsync(cancellationToken);
@@ -288,10 +288,10 @@ return new AskEmployeeForLocationResponse()
 
 Om te werken met bevragingen van de werknemers, moesten er enkele velden toegevoegd worden aan het domein model van 'employee', welke hierboven aangepast of gebruikt  worden als nodig:
 
-* SlackId: nodig om met de werknemer te communiceren in de Slack workspace.
-* LastQuestioned: een DateTime veld om bij te houden wanneer deze werknemer al eens bevraagd is geweest.
+* `SlackId`: nodig om met de werknemer te communiceren in de Slack workspace.
+* `LastQuestioned`: een DateTime veld om bij te houden wanneer deze werknemer al eens bevraagd is geweest.
 
-Toekomstige beschreven scheduler jobs zullen ook de hierin beschreven werkwijze volgen, met een MediatR call naar domein logica. Ook de aangemaakte SlackClient service zal uitgebreid en hergebruikt worden naarmate de features van de applicatie evolueren.
+Toekomstige beschreven scheduler jobs zullen ook de hierin beschreven werkwijze volgen, met een MediatR call naar domein logica. Ook de aangemaakte `SlackClient` service zal uitgebreid en hergebruikt worden naarmate de features van de applicatie evolueren.
 
 ### Antwoorden verwerken {#processanswer}
 
@@ -308,7 +308,7 @@ public async Task<ActionResult<string>> Event([FromBody]SlackRequest request)
 }
 ```
     
-Verdere afhandeling van een binnenkomende Slack event gebeurt via zelfgeschreven eventhandlers. Deze dienen niet verward te worden met de MediatR handlers op domein niveau, welke een implementatie van het mediator patroon mogelijk maken. Alle geïmplementeerde handlers worden samengebundeld in een collectie die geïnjecteerd wordt in de SlackController, welke we dan eenvoudig via een LINQ command kunnen afgaan op hun CanHandle methodes. Dit is het stuk logica van de handlers die laat weten of het het inkomende bericht kan verwerken. Er wordt gecontroleerd op twee zaken: het type van het bericht (dit mag alleen "event_callback" zijn, het door Slack gedefinieerde type voor events zoals berichten), en het channel_type van de oorsprong van het bericht (in dit geval "im", voor privé berichten). Dit zijn allebei 2 van vele beschikbare eigenschappen die Slack meestuurt in hun JSON berichten om het soort bericht te kunnen analyseren. Als het bericht voldoet aan de checks van zo een handler, wordt de Handle() methode aangeroepen, welke voor deze feature eerst nog controleert of het SlackId van de verstuurder niet dat van de Slackbot is (anders geraakte hij vast in een oneindige loop van berichten naar zichzelf sturen), en vervolgens de bijhorende domein logica activeert via een MediatR handler.
+Verdere afhandeling van een binnenkomende Slack event gebeurt via zelfgeschreven eventhandlers. Deze dienen niet verward te worden met de MediatR handlers op domein niveau, welke een implementatie van het mediator patroon mogelijk maken. Alle geïmplementeerde handlers worden samengebundeld in een collectie die geïnjecteerd wordt in de `SlackController`, welke we dan eenvoudig via een LINQ command kunnen afgaan op hun `CanHandle` methodes. Dit is het stuk logica van de handlers die laat weten of het het inkomende bericht kan verwerken. Er wordt gecontroleerd op twee zaken: het type van het bericht (dit mag alleen "event_callback" zijn, het door Slack gedefinieerde type voor events zoals berichten), en het channel_type van de oorsprong van het bericht (in dit geval "im", voor privé berichten). Dit zijn allebei 2 van vele beschikbare eigenschappen die Slack meestuurt in hun JSON berichten om het soort bericht te kunnen analyseren. Als het bericht voldoet aan de checks van zo een handler, wordt de `Handle()` methode aangeroepen, welke voor deze feature eerst nog controleert of het SlackId van de verstuurder niet dat van de Slackbot is (anders geraakte hij vast in een oneindige loop van berichten naar zichzelf sturen), en vervolgens de bijhorende domein logica activeert via een MediatR handler.
 
 ```cs
 public class WorkplaceAnswerHandler : ISlackEventHandler
@@ -337,11 +337,11 @@ public class WorkplaceAnswerHandler : ISlackEventHandler
 }
 ```
 
-Deze domein handler bevat dan de interne logica om op basis van de SlackId eerst de werknemer op te halen, en dan te controleren of hij al geantwoord heeft. Hiervoor is er in het domein model 'employee' en bijhorende database tabel nog een veld HasAnswered bijgevoegd en een bijhorende methode om deze bij een succesvolle database operatie op True te zetten. Er is dan ook teruggegaan naar de implementatie van de Scheduler job om werknemers te bevragen, om bij het afvuren van nieuwe vragen deze vlag op False te zetten bij bevraagde werknemers. Als de werknemer dan nog niet geantwoord heeft, mag de locatie geüpdatet worden, en roepen we de functie van de werknemer aan om aan te geven dat er geantwoord is geweest, en overigens ook het gegeven antwoord nog op te slaan. We houden immers in de databank ook alle verstuurde antwoorden van werknemers bij, welke later nog zullen bekeken kunnen worden in de client applicatie.
+Deze domein handler bevat dan de interne logica om op basis van de SlackId eerst de werknemer op te halen, en dan te controleren of hij al geantwoord heeft. Hiervoor is er in het domein model 'employee' en bijhorende database tabel nog een veld `HasAnswered` bijgevoegd en een bijhorende methode om deze bij een succesvolle database operatie op True te zetten. Er is dan ook teruggegaan naar de implementatie van de Scheduler job om werknemers te bevragen, om bij het afvuren van nieuwe vragen deze vlag op False te zetten bij bevraagde werknemers. Als de werknemer dan nog niet geantwoord heeft, mag de locatie geüpdatet worden, en roepen we de functie van de werknemer aan om aan te geven dat er geantwoord is geweest, en overigens ook het gegeven antwoord nog op te slaan. We houden immers in de databank ook alle verstuurde antwoorden van werknemers bij, welke later nog zullen bekeken kunnen worden in de client applicatie.
 
 ### Laatst gegeven antwoord {#lastanswer}
 
-Er moet een mogelijkheid toegevoegd worden tot het opvragen en weergeven van het laatste antwoord dat een werknemer heeft gestuurd naar de slackbot. Hier is een RESTful web service voor toegevoegd aan de employee API controller om op basis van het Id van de werknemer een verzoek te sturen naar de handler in het domein (GetAnswer) welke de laatste toevoeging in de ICollection<Answer> Answers van de opgehaalde werknemer teruggeeft aan de controller. Deze sturen we dan terug naar de consumer van het API via een DTO welke het Answer domein entity vertegenwoordigt.
+Er moet een mogelijkheid toegevoegd worden tot het opvragen en weergeven van het laatste antwoord dat een werknemer heeft gestuurd naar de slackbot. Hier is een RESTful web service voor toegevoegd aan de employee API controller om op basis van het Id van de werknemer een verzoek te sturen naar de handler in het domein (GetAnswer) welke de laatste toevoeging in de `ICollection<Answer> Answers` van de opgehaalde werknemer teruggeeft aan de controller. Deze sturen we dan terug naar de consumer van het API via een DTO welke het Answer domein entity vertegenwoordigt.
     
 ### Technologienaam wijzigen {#changename}
 
@@ -351,15 +351,15 @@ Er is functionaliteit nodig om de naam van een technologie na het aanmaken ook t
 
 BrainChain's Slackbot moet ook werknemers over hun affiniteit met technologieën kunnen bevragen. Nog een mogelijkheid van het Slack API zijn de zogenoemde 'interactive components'. Dit maakt het mogelijk om interactieve dialogen met knoppen te construeren en verzenden. [^3] Als hier dan een actie wordt ondernomen, zal dit gelijkaardig aan events (bericht sturen,...) een HTTP Post naar een door ons gedefinieerde URL gestuurd worden met de relevante informatie. Dit heeft zijn eigen, aparte endpoint /slack/interaction. Dit bied een duidelijke flow aan om eerst een dialoog met een vraag over een bepaalde technologie met bijhorende 'Ja' en 'Nee' knoppen in elkaar te steken, en dan API logica te schrijven om op het gebruik van één van deze knoppen te reageren.
 
-Voor de praktische implementatie is begonnen met het beschreven JSON body van zo een interactief dialoog te vertalen naar C# syntax in een "ChatPostYesNoMessage" (het eigenlijke bericht), met een collectie "Attachment" (één of meerdere dialogen) met voor elke attachment een collectie "Action" (bv. een knop). Dan is er in het reeds bestaande SlackClient, het aangewezen platform om met Slack te communiceren, een functie bijgevoegd om dit bericht systeemmatig te construeren met de nodige parameters (aanvankelijk: channel, vraagtekst, en technologie). Dit wordt ten slotte geserialiseerd via NewtonSoft.Json.JsonConvert en via "chat.postMessage" naar het meegegeven channel gepost. Deze functie kan dan aangeroepen worden uit het domein, waar er een handler is gemaakt die de werknemers selecteert (gelijkaardig aan de vragenrondes samenstellen bij het bevragen over werkplaats), maar bijkomend ook de lijst van technologieëen van het bedrijf afgaat en er de eerst aangemaakte van selecteert. Er is ook een bijkomend veld 'HasBeenPolled' toegevoegd voor deze feature, welke we bij deze vragenrondes controleren om systematisch de beschikbare technologieëen af te gaan en te bevragen. Als alle technologieëen zijn bevraagd geweest, wordt hun schema gereset. Ten slotte komt er een scheduler job bij om op een tijdsschema deze handler via een MediatR verzoek aan het werk te zetten.
+Voor de praktische implementatie is begonnen met het beschreven JSON body van zo een interactief dialoog te vertalen naar C# syntax in een "ChatPostYesNoMessage" (het eigenlijke bericht), met een collectie "Attachment" (één of meerdere dialogen) met voor elke attachment een collectie "Action" (bv. een knop). Dan is er in het reeds bestaande `SlackClient`, het aangewezen platform om met Slack te communiceren, een functie bijgevoegd om dit bericht systeemmatig te construeren met de nodige parameters (aanvankelijk: channel, vraagtekst, en technologie). Dit wordt ten slotte geserialiseerd via converteerlogica van NewtonSoft en via "chat.postMessage" naar het meegegeven channel gepost. Deze functie kan dan aangeroepen worden uit het domein, waar er een handler is gemaakt die de werknemers selecteert (gelijkaardig aan de vragenrondes samenstellen bij het bevragen over werkplaats), maar bijkomend ook de lijst van technologieëen van het bedrijf afgaat en er de eerst aangemaakte van selecteert. Er is ook een bijkomend veld `HasBeenPolled` toegevoegd voor deze feature, welke we bij deze vragenrondes controleren om systematisch de beschikbare technologieëen af te gaan en te bevragen. Als alle technologieëen zijn bevraagd geweest, wordt hun schema gereset. Ten slotte komt er een scheduler job bij om op een tijdsschema deze handler via een MediatR verzoek aan het werk te zetten.
 
 Bij de eerste implementatie van een soortgelijke feature (het vragen aan een werknemer over zijn werkplaats) werden het bevragen en antwoorden uiteindelijk opgesplitst in twee user stories daar men hier aan de slag moest gaan met vrij veel nieuwe technologieën (ook een extern API) en in veel delen van de applicatie. Hier werden de 2 aspecten van de feature in één story gestoken gezien de opgedane ervaring en het reeds bestaan van een soortgelijke implementatie.
 
-Een slack interaction heeft naast zijn eigen API endpoint ook een verschillende JSON body structuur dan een event. Deze is dan ook naar C# syntax vertaald, en gebruikt in de CanHandle() methode van de nieuw aangemaakte Slack handler. Deze handler is bijgevoegd aan de SlackController. Nog een belangrijk verschil tussen een event en een interaction is het formaat waarin het gestuurd wordt. Een event was een simpele application/json bericht, welke we met een [FromBody] attribuut in de controller konden opvangen. Interactions worden www-form-url-encoded gestuurd, welke een extra stap decoderen vereist. Hier is een service voor geschreven welke een string 'payload' eerst via System.Net.WebUtility decodeert, en dan deserialiseert en teruggeeft. Deze service wordt beschikbaar gemaakt als nodig via een interface welke in dit geval in de SlackController geïnjecteerd wordt (waar de 'ruwe' payload in /slack/interaction met [FromForm] wordt opgevangen en vervolgens gedecodeerd).
+Een slack interaction heeft naast zijn eigen API endpoint ook een verschillende JSON body structuur dan een event. Deze is dan ook naar C# syntax vertaald, en gebruikt in de `CanHandle()` methode van de nieuw aangemaakte Slack handler. Deze handler is bijgevoegd aan de `SlackController`. Nog een belangrijk verschil tussen een event en een interaction is het formaat waarin het gestuurd wordt. Een event was een simpele application/json bericht, welke we met een [FromBody] attribuut in de controller konden opvangen. Interactions worden www-form-url-encoded gestuurd, welke een extra stap decoderen vereist. Hier is een service voor geschreven welke een string 'payload' eerst via System.Net.WebUtility decodeert, en dan deserialiseert en teruggeeft. Deze service wordt beschikbaar gemaakt als nodig via een interface welke in dit geval in de SlackController geïnjecteerd wordt (waar de 'ruwe' payload in /slack/interaction met het [FromForm] attribuut wordt opgevangen en vervolgens gedecodeerd).
 
 ### Werknemers filteren {#filter}
 
-In de client applicatie moet men werknemers op locatie kunnen filteren. Hier zijn in het domein 2 grote aanpassingen gebeurd. Eerst is er een MediatR handler toegevoegd om via een LINQ command alle unieke locaties in de databank op te halen (een simpele mogelijkheid met LINQ via het Distinct() operator) en deze terug te geven aan een service GetLocations op de Employee API Controller welke we beschikbaar stellen voor consumptie, te gebruiken door het filter component in de client applicatie. Verder is de werking van het ophalen van werknemers aangepast. In het proces van ontwikkelen is er vlug gezien dat het ophalen van de werknemers voor de initiële lijst, en dan nog eens ophalen door een filter, functioneel bijna identiek is. Om code duplicatie te minimaliseren, is de bestaande domein logica aangepast om een extra parameter 'location' te accepteren, en indien deze leeg is, de volledige lijst werknemers terug te sturen. Dit was allemaal mogelijk in één vlotte LINQ query. Echter kon deze niet om met een locatie die null is (welke het geval is bij het allereerste verzoek voor de lijst werknemers, voordat de filter is gebruikt), dus moet dit eerst omgezet worden naar een lege string. In de bijhorende API service komt er dan simpelweg nog een parameter 'location' bij. Bij de implementatie van deze verandering kan het voordeel van het 'loosely-coupled' design van de applicatie opgemerkt worden: het vrij eenvoudig en snel aanpassen van hoofdzakelijke functionaliteit zonder doorwegende problemen.
+In de client applicatie moet men werknemers op locatie kunnen filteren. Hier zijn in het domein 2 grote aanpassingen gebeurd. Eerst is er een MediatR handler toegevoegd om via een LINQ command alle unieke locaties in de databank op te halen (een simpele mogelijkheid met LINQ via het `Distinct()` operator) en deze terug te geven aan een service `GetLocations` op de Employee API Controller welke we beschikbaar stellen voor consumptie, te gebruiken door het filter component in de client applicatie. Verder is de werking van het ophalen van werknemers aangepast. In het proces van ontwikkelen is er vlug gezien dat het ophalen van de werknemers voor de initiële lijst, en dan nog eens ophalen door een filter, functioneel bijna identiek is. Om code duplicatie te minimaliseren, is de bestaande domein logica aangepast om een extra parameter 'location' te accepteren, en indien deze leeg is, de volledige lijst werknemers terug te sturen. Dit was allemaal mogelijk in één vlotte LINQ query. Echter kon deze niet om met een locatie die null is (welke het geval is bij het allereerste verzoek voor de lijst werknemers, voordat de filter is gebruikt), dus moet dit eerst omgezet worden naar een lege string. In de bijhorende API service komt er dan simpelweg nog een parameter 'location' bij. Bij de implementatie van deze verandering kan het voordeel van het 'loosely-coupled' design van de applicatie opgemerkt worden: het vrij eenvoudig en snel aanpassen van hoofdzakelijke functionaliteit zonder doorwegende problemen.
 
 ```cs
 var location = request.Location ?? string.Empty;
@@ -371,11 +371,11 @@ var employees = await _context.Employees.Where(e => e.IsActive == true &&
                                           
 ### Beschikbare technologieën & icons {#icons}
 
-Er moet een mogelijkheid voorzien worden om een technologie toe te voegen in het technology component van de client, met een bijhorende icoon. Volgens de requirement moet dit niet noodzakelijk het 'juiste' icoon zijn, een administrator heeft de mogelijkheid om zelf een technologienaam in te vullen en zelf een icoon te kiezen (dus indien gewenst, kan men 'Angular' typen en C++ icoon selecteren). Tot dit doeleinde is er een provider voor iconen gekozen, te bezichtigen op [^4], welke gerendeerd zullen worden in de client applicatie. In de backend voorzien we een nieuw model en databank tabel 'TechnologyIcon' welke de beschreven class bij de provider bijhoudt als property. Hier werd dan een domein handler voor toegevoegd om alle TechnologyIcon records in een lijst door te sturen, en een API service GetAllIcons op TechnologyController om deze aan te spreken vanuit de client. Tenslotte voegen we bij het Technology entity 'icon' ook toe als property, en in zijn constructor is vanaf nu een string "icon" vereist om een nieuwe technologie aan te maken, wat ook nog een kleine aanpassing in het bijhorende domein handler CreateTechnology vereist.
+Er moet een mogelijkheid voorzien worden om een technologie toe te voegen in het technology component van de client, met een bijhorende icoon. Volgens de requirement moet dit niet noodzakelijk het 'juiste' icoon zijn, een administrator heeft de mogelijkheid om zelf een technologienaam in te vullen en zelf een icoon te kiezen (dus indien gewenst, kan men 'Angular' typen en C++ icoon selecteren). Tot dit doeleinde is er een provider voor iconen gekozen [^4], welke gerendeerd zullen worden in de client applicatie. In de backend voorzien we een nieuw model en databank tabel 'TechnologyIcon' welke de beschreven class bij de provider bijhoudt als property. Hier werd dan een domein handler voor toegevoegd om alle TechnologyIcon records in een lijst door te sturen, en een API service `GetAllIcons` op het Technology API om deze aan te spreken vanuit de client. Tenslotte voegen we bij het Technology entity 'icon' ook toe als property, en in zijn constructor is vanaf nu een string "icon" vereist om een nieuwe technologie aan te maken, wat ook nog een kleine aanpassing in het bijhorende domein handler `CreateTechnology` vereist.
 
 ### Uitbreiding Employee Detail {#expanddetail}
 
-Er bestond al functionaliteit om een werknemer aan te klikken en een detailpagina te laten zien, voorlopig alleen nog met hun huidige werkplaats. We dienen dit nu uit te breiden met de vaardigheden en antwoorden (naar de vragen van slackbot toe) van de werknemer, en het aanpassen van de antwoorden. Omdat we in ons database model al deze verbanden hadden gelegd, was een aanpassing van de bestaande LINQ query voor een enkelvoudige werknemer al voldoende (komt bij: .include(e => e.Skills en hetzelfde voor answers). We voegen dan nog een domein handler toe waar we een antwoord aan de hand van zijn Id en een nieuwe tekststring kunnen aanpassen, en deze functionaliteit publiceren we in het context van de API EmployeeController in een service. Ten slotte voorzien we nog een nieuw DTO met meer informatie voor de service die een employee terugstuurt om de nieuwe meegegeven collecties te kunnen bijvoegen.
+Er bestond al functionaliteit om een werknemer aan te klikken en een detailpagina te laten zien, voorlopig alleen nog met hun huidige werkplaats. We dienen dit nu uit te breiden met de vaardigheden en antwoorden (naar de vragen van slackbot toe) van de werknemer, en het aanpassen van de antwoorden. Omdat we in ons database model al deze verbanden hadden gelegd, was een aanpassing van de bestaande LINQ query voor een enkelvoudige werknemer al voldoende (komt bij: `.include(e => e.Skills)` en hetzelfde voor answers). We voegen dan nog een domein handler toe waar we een antwoord aan de hand van zijn Id en een nieuwe tekststring kunnen aanpassen, en deze functionaliteit publiceren we in het context van de Employee API in een service. Ten slotte voorzien we nog een nieuw DTO met meer informatie voor de service die een employee terugstuurt om de nieuwe meegegeven collecties te kunnen bijvoegen.
 
 Er zijn er bij deze stap nog een aantal belangrijke refactorings geweest voor bugfixes en design onderhoud:
 
@@ -386,9 +386,9 @@ Er zijn er bij deze stap nog een aantal belangrijke refactorings geweest voor bu
 
 ### Refactor berichtversturing & implementatie polly {#polly}
 
-In de toepassingen van de Slack API die de scheduler aanstuurt werden zo ver berichten gestuurd naar het opgeslagen SlackId van werknemers. Echter is dit een mogelijkheid die gaat uitgefaseerd worden door Slack, en wordt er op de relevante pagina aangeraden om naar channel ID's te schakelen. Bijkomend is ook het feit dat ChannelId's geheel uniek zijn over slack, maar UserId's niet (alleen per workspace). Slack voorziet een API methode om als tussenstap op basis van een slackId een channelid terug te sturen. [^5] Er werd dan in de SlackClient een eigen methode aangemaakt die deze API functie implementeert en op basis van een gegeven string SlackId een string Channelid teruggeeft aan de andere methodes van SlackClient (dus alle applicatie logica roept nog altijd dezelfde methodes aan - deze tussenstap gebeurt intern in SlackClient). Ook hier zijn bijhorende 'vertalingen' van de JSON request en response bodies aangemaakt in C# klasses om in de applicatie gebruikt te kunnen worden. De enige nodige globale aanpassing was dan het veranderen van ChannelId parameters naar SlackId in stukken functionaliteit waar SlackClient werd gebruikt.
+In de toepassingen van de Slack API die de scheduler aanstuurt werden zo ver berichten gestuurd naar het opgeslagen SlackId van werknemers. Echter is dit een mogelijkheid die gaat uitgefaseerd worden door Slack, en wordt er op de relevante pagina aangeraden om naar channel ID's te schakelen. Bijkomend is ook het feit dat ChannelId's geheel uniek zijn over slack, maar UserId's niet (alleen per workspace). Slack voorziet een API methode om als tussenstap op basis van een slackId een channelid terug te sturen. [^5] Er werd dan in de SlackClient een eigen methode aangemaakt die deze API functie implementeert en op basis van een gegeven string SlackId een string Channelid teruggeeft aan de andere methodes van `SlackClient` (dus alle applicatie logica roept nog altijd dezelfde methodes aan - deze tussenstap gebeurt intern in SlackClient). Ook hier zijn bijhorende 'vertalingen' van de JSON request en response bodies aangemaakt in C# klasses om in de applicatie gebruikt te kunnen worden. De enige nodige globale aanpassing was dan het veranderen van ChannelId parameters naar SlackId in stukken functionaliteit waar `SlackClient` werd gebruikt.
 
-Hier werd ook bij de functionaliteit om berichten te versturen logica geïmplementeerd om automatisch opnieuw te proberen bij het falen. Dit werd bereikt met het gebruik van Polly, een .NET bibliotheek dat toelaat retry policies te gebruiken. [^6] Voor de specifieke implementatie in SlackClient werd eerst een reeks mogelijke HttpStatusCodes gefenieerd in een HttpStatusCode[] array. Dan werd de policy zelf gedefinieerd om deze te herkennen (en ook HttpRequestExceptions) en om dan 6 keer, met exponentiële wachttijd tijdens het herproberen. In Polly syntax: 
+Hier werd ook bij de functionaliteit om berichten te versturen logica geïmplementeerd om automatisch opnieuw te proberen bij het falen. Dit werd bereikt met het gebruik van Polly, een .NET bibliotheek dat toelaat retry policies te gebruiken. [^6] Voor de specifieke implementatie in `SlackClient` werd eerst een reeks mogelijke HttpStatusCodes gefenieerd in een `HttpStatusCode[]` array. Dan werd de policy zelf gedefinieerd om deze te herkennen (en ook HttpRequestExceptions) en om dan 6 keer, met exponentiële wachttijd tijdens het herproberen. In Polly syntax: 
 
 ```cs
 _policy = Policy
@@ -401,7 +401,7 @@ _policy = Policy
     
 ### Derived properties {#derivedprops}
 
-Werknemers en technologieëen worden van de databank opgevraagd doormidden van LINQ queries die kijken of de IsActive vlag op 'False' staat. Deze werden gerefactored naar derived properties onder het Company entity. Bij technologieëen ziet dat er als volgt uit.
+Werknemers en technologieëen worden van de databank opgevraagd doormidden van LINQ queries die kijken of de `IsActive` vlag op 'False' staat. Deze werden gerefactored naar derived properties onder het Company entity. Bij technologieëen ziet dat er als volgt uit.
 
 ```cs
 public ICollection<Technology> Technologies { get; private set; }
@@ -412,11 +412,11 @@ In de database query kunnen we dan eerst de company opvragen, en dan zijn actiev
 
 ### Technologie detail {#techdetail}
 
-Er wordt ook de feature beschikbaar gemaakt om in de detail view van een technologie, alle werknemers te laten zien die bedreven zijn met die technologie. Praktisch is dit geïmplementeerd in een domein handler met een LINQ query om op basis van een technologyId alle werknemers met een bijhorende Skill met die technologyId (een relatie toegevoegd in 2.2.1.13) in een lijst terug te geven. Deze functionaliteit publiceren we dan via een service in de API TechnologyController.
+Er wordt ook de feature beschikbaar gemaakt om in de detail view van een technologie, alle werknemers te laten zien die bedreven zijn met die technologie. Praktisch is dit geïmplementeerd in een domein handler met een LINQ query om op basis van een technologyId alle werknemers met een bijhorende Skill met die technologyId (een eerder toegevoegde relatie) in een lijst terug te geven. Deze functionaliteit publiceren we dan via een service in de Technology API.
 
 ### vaardigheid aan een werknemer geven {#addskill}
 
-Werknemers kunnen aan hun eigen profiel vaardigheden toevoegen doormidden van interactie met de Slackbot, maar er wordt ook een administratieve functie tot toevoegen van vaardigheden voorzien in de detailpagina van een werknemer. Hiervoor werd een handler toegevoegd welke een werknemer ophaalt en onder deze employee eerst controleert voor het al bestaan voor deze skill, en indien niet, het ophaalt op basis van een meegegeven technologyId en dan toevoegt. Deze functionaliteit wordt gepubliceerd onder een nieuwe service in de API EmployeesController. De lijst van beschikbare technologieëen (voor de functie in de client applicatie) wordt opgehaald uit de reeds bestaande logica om alle technologiëen van een bedrijf op te lijsten, en heeft geen veranderingen nodig. 
+Werknemers kunnen aan hun eigen profiel vaardigheden toevoegen doormidden van interactie met de Slackbot, maar er wordt ook een administratieve functie tot toevoegen van vaardigheden voorzien in de detailpagina van een werknemer. Hiervoor werd een handler toegevoegd welke een werknemer ophaalt en onder deze employee eerst controleert voor het al bestaan voor deze skill, en indien niet, het ophaalt op basis van een meegegeven technologyId en dan toevoegt. Deze functionaliteit wordt gepubliceerd onder een nieuwe service in de Employee API. De lijst van beschikbare technologieëen (voor de functie in de client applicatie) wordt opgehaald uit de reeds bestaande logica om alle technologiëen van een bedrijf op te lijsten, en heeft geen veranderingen nodig. 
 
 Er zijn een aantal belangrijke refactorings toegevoegd in deze stap, mede om conform te blijven met CQRS design en de verschillende manieren van een vaardigheid toe te voegen overzichtelijk te houden:
 
@@ -447,7 +447,7 @@ De Slack Events API stuurt een request naar de Slack controller van de web API. 
 
 ### Categorizatie beantwoorde technologieën {#categorizetech}
 
-Slackbot accepteert momenteel alle doorgestuurde teksten als antwoord voor de open vraag over technologieëen. Dit moest nu aangepast worden om op een slimmere manier deze te kunnen categorizeren. De bedoeling is om gegeven antwoorden te vergelijken met de verzameling technologieëen onder het contextueel bedrijf. Hiervoor is na onderzoek gekozen voor het **Levenshtein Distance** algoritme. Dit is een algoritme welke op basis van 2 string inputs het verschil (de 'afstand') in karakters tussen de 2 zal teruggeven. (Babar, N. 2017) De praktische implementatie is in een service op domein niveau, welke we waar nodig injecteren. In de domein handler waar verzoeken toe komen om een skill toe te voegen bij een employee op basis van een string (hun antwoord), gebruiken we deze service eerst om het te vergelijken tegenover alle technologiëen van het bedrijf in de databank. Als er een technologie word gevonden met een score onder het LEVENSHTEIN_DISTANCE_TRESHOLD (op het moment van schrijven is dit 3), word de toevoeging toegelaten. Als er meerdere kandidaten zijn, wordt de technologie met de laagste score (een score van 0 betekent volledig identiek). Indien niet, wordt er een nieuwe 'proposedTechnology' aangemaakt, een nieuw entity model dat dient om alle afgewezen antwoorden te verzamelen. Deze worden apart in de databank, maar wel nog een verzameling onder het bedrijf opgeslagen. Uiteraard wordt de werknemer hierover ingelicht.
+Slackbot accepteert momenteel alle doorgestuurde teksten als antwoord voor de open vraag over technologieëen. Dit moest nu aangepast worden om op een slimmere manier deze te kunnen categorizeren. De bedoeling is om gegeven antwoorden te vergelijken met de verzameling technologieëen onder het contextueel bedrijf. Hiervoor is na onderzoek gekozen voor het **Levenshtein Distance** algoritme. Dit is een algoritme welke op basis van 2 string inputs het verschil (de 'afstand') in karakters tussen de 2 zal teruggeven. (Babar, N. 2017) De praktische implementatie is in een service op domein niveau, welke we waar nodig injecteren. In de domein handler waar verzoeken toe komen om een skill toe te voegen bij een employee op basis van een string (hun antwoord), gebruiken we deze service eerst om het te vergelijken tegenover alle technologiëen van het bedrijf in de databank. Als er een technologie word gevonden met een score onder een gedfinieerde limiet (op het moment van schrijven is dit een integer van 3), word de toevoeging toegelaten. Als er meerdere kandidaten zijn, wordt de technologie met de laagste score (een score van 0 betekent volledig identiek). Indien niet, wordt er een nieuwe 'proposedTechnology' aangemaakt, een nieuw entity model dat dient om alle afgewezen antwoorden te verzamelen. Deze worden apart in de databank, maar wel nog een verzameling onder het bedrijf opgeslagen. Uiteraard wordt de werknemer hierover ingelicht.
 
 Dit nieuw entity model 'ProposedTechnology' krijgt dan ook nog zijn eigen domein handlers, één om te hard deleten en één om alle voorgestelde technologieëen op te halen. Deze worden onder hun eigen nieuwe API controller 'ReviewController' gepubliceerd, aangezien het de bedoeling is van deze feature om zijn eigen client component te krijgen, waar de administrator deze onherkende technologieëen kan reviewen en verwijderen of toevoegen als nieuwe technologie als nodig.
 
@@ -457,11 +457,11 @@ Hier is nog een bijkomende refactor gebeurd in het domein:
 
 ### Werknemer aanpassen {#editemployee}
 
-Er is een feature bijkomen om in het detailpagina van een werknemer ook zijn gegevens aan te passen. Hier was de eerste stap het toevoegen van update methodes in het entity Employee voor de nodige velden (locatie, naam, email en geboortedatum). Elke parameter wordt gecontroleerd op het binnenkomen van een null value, en het email word met dezelfde Regex dat gebruikt word bij het aanmaken van een nieuwe werknemer gecontroleerd op formaat. Vervolgens is een domein handler toegevoegd om deze methodes aan te roepen en de veranderingen te bewaren in de databank. Ten slotte stellen we deze functionaliteit beschikbaar in een nieuwe service onder het API EmployeeController, waar ook de naam, geboortedatum en email validators worden herbruikt alvorens een verzoek tot verandering door te sturen.
+Er is een feature bijkomen om in het detailpagina van een werknemer ook zijn gegevens aan te passen. Hier was de eerste stap het toevoegen van update methodes in het entity Employee voor de nodige velden (locatie, naam, email en geboortedatum). Elke parameter wordt gecontroleerd op het binnenkomen van een null value, en het email word met dezelfde Regex dat gebruikt word bij het aanmaken van een nieuwe werknemer gecontroleerd op formaat. Vervolgens is een domein handler toegevoegd om deze methodes aan te roepen en de veranderingen te bewaren in de databank. Ten slotte stellen we deze functionaliteit beschikbaar in een nieuwe service onder het Employee API, waar ook de naam, geboortedatum en email validators worden herbruikt alvorens een verzoek tot verandering door te sturen.
 
 ### Categorizatie beantwoorde werkplaatens {#categorizeloc}
 
-Er moet ook categorizatie van de antwoorden over de werkplaats van de werknemers plaatsvinden. Om hiermee te assisteren is er beroep gedaan op het Places API van Google. Om deze externe communicatie te verzorgen is een GoogleClient klasse geschreven welke we via een interface IGoogleClient beschikbaar maken. Deze voegen we toe als een extended HttpClient voorgeconfigureerd met een baseUrl uit appsettings.json gelijkaardig aan SlackClient.
+Er moet ook categorizatie van de antwoorden over de werkplaats van de werknemers plaatsvinden. Om hiermee te assisteren is er beroep gedaan op het Places API van Google. Om deze externe communicatie te verzorgen is een GoogleClient klasse geschreven welke we via een interface `IGoogleClient` beschikbaar maken. Deze voegen we toe als een extended `HttpClient` voorgeconfigureerd met een baseUrl uit appsettings.json gelijkaardig aan `SlackClient`.
 
 ```cs
 public static IServiceCollection AddGoogleClient(this IServiceCollection services, string placeSearchUri)
@@ -477,7 +477,7 @@ public static IServiceCollection AddGoogleClient(this IServiceCollection service
 }
 ```
     
-en in Startup.cs
+en in de startup file:
 
 ```cs
 services.AddGoogleClient(Configuration.GetSection("ConfigurePlacesUris")["PlaceSearchUri"]);
@@ -491,21 +491,21 @@ Overings heeft hier ook een refactor van de domein handler plaatsgevonden: bij e
 
 Doorheen de ontwikkeling en testing van de applicatie is gewerkt met een statische 'dummy' CompanyId 1. In het uiteindelijke gebruik van de applicatie is het de bedoeling dat ieder bedrijf toegang heeft tot zijn eigen 'kopie' van de applicatie en zijn eigen data. Het is mogelijk om in Auth0 metadata toe te voegen voor de uitgegeven tokens: user_metadata en app_metadata. Het eerste dient voor voorkeuren (profiel, taal, enz) en het tweede voor belangrijkere data die het gebruik van de applicatie veranderen. Hier kan dan een nieuwe veld "CompanyId" bijgestoken worden om gebruikers op hun Auth0 account alleen toegang te geven tot hun eigen bedrijf.
 
-Omdat de API controllers al beschermd zijn door Auth0 authorizatie, is er op elke call naar de API al een token aanwezig. We kunnen hier dan in principe aan onder de zogenoemde "UserPrincipal Claims". Dit is de scope van de gebruiker die het API interface op dat moment aan het gebruiken is. Echter moeten we deze eerst deserialiseren, aangezien dit in json formaat is. Hier is een custom extensie voor geschreven van ClaimsPrincipal.
+Omdat de API controllers al beschermd zijn door Auth0 authorizatie, is er op elke call naar de API al een token aanwezig. We kunnen hier dan in principe aan onder de zogenoemde "UserPrincipal Claims". Dit is de scope van de gebruiker die het API interface op dat moment aan het gebruiken is. Echter moeten we deze eerst deserialiseren, aangezien dit in json formaat is. Om dit te bereiken is een extensie voor geschreven van ClaimsPrincipal.
 
 ```cs
 public static class MetaDataExtensions
+{
+    public static int GetCompanyId(this ClaimsPrincipal user)
     {
-        public static int GetCompanyId(this ClaimsPrincipal user)
-        {
-            var claim = user.Claims.First();
-            var metaData = JsonConvert.DeserializeObject<AppMetadata>(claim.Value);
-            return metaData.CompanyId;
-        }
+        var claim = user.Claims.First();
+        var metaData = JsonConvert.DeserializeObject<AppMetadata>(claim.Value);
+        return metaData.CompanyId;
     }
+}
 ```
     
-Deze extension laat ons dan toe op elke controller het companyId te halen uit User.GetcompanyId(). Alle parameters om een companyId zijn dan ook verwijderd, daar dit een veel veiligere manier is om toegang tot de data per bedrijf te verschaffen.
+Deze extensie laat ons dan toe op elke controller het companyId te halen uit het gebruik van `User.GetcompanyId()`. Alle parameters om een companyId zijn dan ook verwijderd, daar dit een veel veiligere manier is om toegang tot de data per bedrijf te verschaffen.
 
 ## Frontend {#frontend}
 ### Architectuur en Programeerconcepten

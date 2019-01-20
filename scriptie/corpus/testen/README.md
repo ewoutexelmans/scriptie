@@ -21,7 +21,7 @@ public class WhenValidatingEmail
 
 Om verder te gaan met dit principe van documenterende tests te schrijven, is er gebruik gemaakt van **FluentAssertions**. Dit is een bibliotheek dat een alternatieve werkwijze aanbiedt tegenover het UnitTesting framework van Microsoft zelf, en is ook ontwikkeld geweest met het doel van zo leesbaar mogelijk te zijn. Daarbovenop is het beschikbaar met een groot aantal extensies om complexere tests te ontwikkelen.
 
-De superieure leesbaarheid van FluentAssertions syntax kan vlug aangetoond worden:
+De superieure leesbaarheid van FluentAssertions syntax kan eenvoudig aangetoond worden:
 
 ```cs
 string email = "valid@email.com";
