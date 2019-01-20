@@ -15,4 +15,3 @@ Een object dat asynchroon waardes kan *emitten*. *Emit* enkel de waarde als er *
 Observers *subscriben* op Observables en kunnen zo reageren op de waarde die wordt *ge-emit*.
 ## observers
 Observers *subscriben* op Observables en kunnen zo reageren op de waarde die wordt *ge-emit*.
-
