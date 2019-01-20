@@ -38,15 +38,30 @@ In de featuremodules wordt het aantal slimme componenten zo klein mogelijk gehou
 ##### Reactive programming
 Reactive programmeren is een ontwikkelingsmodel gestructureerd rond asynchrone datastreams. Reactive Extensions, ofte Rx, is de API die het meeste gebruikt wordt om reactive te programmeren. In de client wordt er gebruik gemaakt van de RxJS, de Rx library voor javascript.
 
+######Observables, Observers en Operators:
 Rx is opgebouwd rond het gedachtegoed van het Observable Pattern, het Iterator Pattern en Functional Programming.
-De belangrijkste  van Observables en Observers. Observers kunnen zich abonneren (subscriben) op een Observable. Wanneer Observables datastreams de wereld insturen, zullen de geabonneerde Observers luisteren naar en reageren op de datastreams. De kracht van Rx zit in het feit dat de API de client toegang geeft tot verschillende Operators. Deze operators zorgen ervoor dat we datastreams kunnen transformeren, combineren, manipuleren, enzovoort… (Bhuvan, 2018).
+De belangrijkste  van Observables en Observers. Observers kunnen zich abonneren (*subscriben*) op een Observable. Wanneer Observables datastreams de wereld insturen, zullen de geabonneerde Observers luisteren naar en reageren op de datastreams. De kracht van Rx zit in het feit dat de API de client toegang geeft tot verschillende Operators. Deze operators zorgen ervoor dat we datastreams kunnen transformeren, combineren, manipuleren, enzovoort… (Bhuvan, 2018).
 
 Rx wordt in het project gebruikt om op een vlotte en asynchrone manier dataflow tussen de verschillende componenten, services, directives, enzovoort… te voorzien. De belangrijkste plek waar Rx gebruikt wordt, is bij de communicatie tussen de client en de backend.
-De web API maakt gebruik van Swashbuckle om een swagger file te generen. In de client wordt er gebruik gemaakt van de ng-swagger-gen library om services aan te maken die de effectieve REST calls naar de web API gaan uitvoeren. Alle methodes in de gegenereerde services retourneren Observables. De data die de client toont moet altijd de meest recente zijn die in de databank aanwezig is. Daarom steekt er een service als buffer tussen de slimme component die de data nodig heeft, en de service die de calls naar de web API maakt. De werking van zo een bufferservice wordt in de volgede paragraaf uitgelegd, met een voorbeeld uit dit project.
+De web API maakt gebruik van Swashbuckle om een swagger file te generen. In de client wordt er gebruik gemaakt van de ng-swagger-gen library om services aan te maken die de effectieve REST calls naar de web API gaan uitvoeren. Alle methodes in de gegenereerde services retourneren Observables. De data die de client toont moet altijd de meest recente zijn die in de databank aanwezig is. Daarom steekt er een service als buffer tussen de slimme component die de data nodig heeft, en de service die de calls naar de web API maakt. De werking van zo een bufferservice wordt in de volgende paragraaf uitgelegd, met een voorbeeld uit dit project.
+
+![Rx uitleg](../../img/rx_uitleg.png)
 
 Op het beheerscherm voor de medewerkers kan de beheerder een lijst van medewerkers raadplegen en de details van elke medewerker te zien krijgen. Op deze lijst van medewerkers kunnen er CRUD-operaties worden uitgevoerd.
-De buffer service heeft een Observable property genaamd employees. Employees heeft als type een lijst van medewerkers. Employees wordt gecreëerd door combineLatest, een van de methodes van Rx. CombineLatest verwacht als parameters meerdere Observables, in dit geval refreshSubject en filterSubject. Subjects zijn een type van Observables. Zodra een van de twee Subjects een nieuwe waarde uitzendt, zal employees door combineLatest zijn nieuwe waarde uitzenden. De Rx operator, mergeMap, wordt toegepast op combineLatest om ervoor te zorgen dat de waarde die employees zal uitzenden de lijst van medewerkers is. MergeMap spreekt de methode uit de gegenereerde service aan, die de GET-request naar de web API doet voor de lijst van medewerkers. MergeMap zorgt er ook voor dat employees gelijk is aan de Observable die geretourneerd wordt door de get methode van de gegenereerde service. Wanneer de client een CRUD-operatie wil uitvoeren op de lijst van medewerkers, wordt ervoor gezorgd dat refresSubject een waarde uitzendt (deze waarde mag altijd null zijn). Zo bevat employees altijd de meest recente lijst.
+De buffer service heeft een Observable property genaamd employees. Employees heeft als type een lijst van medewerkers. Employees wordt gecreëerd door combineLatest, een van de methodes van Rx. CombineLatest verwacht als parameters meerdere Observables, in dit geval refreshSubject en filterSubject. Subjects zijn objecten die zowel Observable als Observer zijn.
+Zodra een van de twee Subjects een nieuwe waarde emit, zal employees door combineLatest zijn ook zijn waarde *emitten* uitzenden. De Rx operator, mergeMap, wordt toegepast op combineLatest om ervoor te zorgen dat de waarde die employees zal *emitten* de lijst van medewerkers is. 
+MergeMap spreekt de methode uit de gegenereerde service aan, die de GET-request naar de web API doet voor de lijst van medewerkers. MergeMap zorgt er ook voor dat employees de Observable, die geretourneerd wordt door de GET methode van de gegenereerde service, wordt toegewezen.
+Wanneer de client een CRUD-operatie wil uitvoeren op de lijst van medewerkers, wordt ervoor gezorgd dat refreshSubject een waarde uitzendt (deze waarde mag altijd null zijn). Aangezien refreshSubject een nieuwe waarde emit, wordt de functie van mergeMap terug opgeroepen.
+Zo bevat employees altijd de meeste recente lijst van medewerkers.
 
+###### Subscriben en Unsubscriben in Angular
+Een Observer moet subscriben op een Observable om toegang te krijgen tot de waardes die de Observable emit. Een Observable emit alleen maar waardes als een Observer op hem gesubscribed is.
+Wanneer er in een directive of een component gesubscribed wordt op een Observable, moet ervoor gezorgd worden dat de Observer unsubscribed als de directive of component vernietigd wordt. Gebeurt dit niet, kunnen er geheugenlekken optreden in de applicatie.
+
+Angular en Rx hebben manieren die het subscriben en unsubscriben kunnen versoepelen.
+Angular heeft de ingebouwde async pipe. De async pipe kan gebruikt worden om de data uit een Observable als deze meegegeven wordt in een HTML-template. De async pipe zorgt ervoor dat het subscriben en unsubscriben automatisch wordt afgehandeld.
+Rx heeft verschillende operators die het subscriben en unsubscriben afhandelen.
+Menselijke fouten worden vermeden wanneer er gebruik wordt gemaakt van deze methoden.
 
 ## Continue Integratie {#continue_integratie}
 Azure pipelines yml files
@@ -81,3 +96,4 @@ Iemand die de repository clonet, kan het bash script: build.sh uitvoeren. Dit sc
 
 [^1]: *Tree shaking* is een term die, in de context van JavaScript, gebruikt wordt om het elimineren van dode code te beschrijven. Ongebruikte modules worden tijdens het buildproces niet gebundeld door *tree shaking* (Bachuk, 2017).
 [^2]: De services die gegeneerd worden door Swagger zorgen ervoor dat de client calls kan doen naar de backend.
+[^3]: De OnDestroy lifecycle hook zorgt ervoor dat componenten, directives, services, ... functies kunnen uitvoeren, wanneer ze vernietigt worden.
