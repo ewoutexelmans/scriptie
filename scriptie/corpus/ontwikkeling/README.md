@@ -509,10 +509,70 @@ public static class MetaDataExtensions
 Deze extension laat ons dan toe op elke controller het companyId te halen uit User.GetcompanyId(). Alle parameters om een companyId zijn dan ook verwijderd, daar dit een veel veiligere manier is om toegang tot de data per bedrijf te verschaffen.
 
 ## Frontend {#frontend}
+### Architectuur en Programeerconcepten
+#### Structuur
+De client-side van het project is opgebouwd in Angular. Sinds oktober 2018 maakt het project gebruik van Angular versie 7.
+
+De Angular CLI wordt gebruikt om de client en zijn componenten, services, ... te genereren. Dit zorgt ervoor dat de structuur van de client zich houdt aan de best practices, aangeraden door de officiële documentatie van Angular (Angular Docs, s.d.).
+De folder waarin het client-side project zich bevindt, is hernoemd naar *Involved.BrainChain.Client* om consequent te zijn met de naamgevingsregels van de backend projecten.
+
+Om ervoor te zorgen dat de implementatie van features, zowel op korte termijn als op lange termijn, helder en overzichtelijk kan gebeuren, passen we in de client applicatie het volgende principe toe; Feature- , shared- en coremodules (Angular Docs, s.d.).
+
+**Featuremodules** zijn modules gecreëerd voor een specifieke toepassing van de applicatie. 
+Het is de bedoeling dat bestanden die gerelateerd zijn aan een zekere functionaliteit, in één folder terechtkomen. De totale inhoud van de folder wordt dan gehangen aan de featuremodule. Dit betekent concreet, dat de featuremodules afgestemd zijn op de businesslogica van onze applicatie. Bijvoorbeeld, alle client-side logica die een beheerder nodig heeft om medewerkers van het bedrijf te beheren, wordt gebundeld in de medewerkers featuremodule.
+Elke featuremodule heeft een routingmodule. Op deze manier heeft elke featuremodule een relatie met een specifieke link in de client applicatie. Featuremodules zijn lazy-loaded. Wanneer de gebruiker surft naar de link van een featuremodule Dit zorgt ervoor dat de modules enkel geladen worden wanneer ze beschikbaar moeten zijn voor de gebruiker.
+In dit project bevatten de featuremodules voornamelijk slimme- en domme componenten, en services.
+
+De **sharedmodule** bevat delen van de applicatie die in meerdere featuremodules gebruikt worden.
+De sharedmodule bevat voornamelijk directives, pipes, componenten,.... Componenten die gebruikt worden in meer dan twee featuremodules, worden als vuistregel gedeclareerd in de sharedmodule. Deze componenten zijn altijd domme componenten.
+Services horen niet thuis in de sharedmodule. Dit voorkomt dat er meerdere instanties van een singleton service worden gecreëerd.
+De sharedmodule wordt geïmporteerd in de featuremodules die toegang nodig hebben tot de shared componenten, directives, enzovoorts.
+
+De **coremodule** bevat alle services en componenten die de client moet laden bij het opstarten van de applicatie.
+In het algemeen zijn het meestal services die gedeclareerd worden in de coremodule.
+De coremodule wordt geïmporteerd in de root AppModule, en enkel daar.
+
+Alle services in de client zijn singelton services. De coremodule zorgt ervoor dat de services geprovided worden in de root van de applicatie. Dit maakt dat de client meer *tree shakable*[^7] is.
+Services die gebruikt worden in slechts één featuremodule, worden mee in de folder van die featuremodule geplaatst. Ook deze services worden geprovided in de root.
+De services die gegeneerd worden met behulp van Swagger, zijn voorbeelden van services die in meerdere featuremodules gebruikt kunnen worden.[^8] Deze services horen dus in de folder van de coremodule.
+
+De componenten die aanwezig zijn in de featuremodules, zijn opgedeeld in domme en slimme componenten. De relatie tussen de slimme en domme componenten is meestal een parent-child relatie.
+Slimme componenten staan in voor de werking van de client en het verwerken van data. Domme componenten tonen de data aan de gebruiker, en zorgt ervoor dat de gebruiker kan interageren met de data (Arnold, 2017). Bijvoorbeeld, data die verwerkt werd in de slimme component en getoond moet worden aan de gebruiker, wordt doorgespeeld naar een domme component. Het is dan de taak van die domme component om de data te tonen. Als een gebruiker interactie moet kunnen hebben met een domme component, wordt dit niet afgehandeld door de domme component. De domme component stuurt de interactie van de gebruiker naar zijn ouder, de slimme component. De slimme component zal dan de interactie van de gebruiker afhandelen.
+Als gevolg zullen services nooit geïnjecteerd worden in domme componenten, enkel in de slimme ouder.
+In de featuremodules wordt het aantal slimme componenten zo klein mogelijk gehouden. Concreet zullen de verschillende routes van de client altijd verwijzen naar de slimme componenten. De DOM-elementen die getoond moeten worden zijn dan opgebouwd met de HTML-selectors van de domme componenten.
+
+####  Programmeerconcepten
+##### Reactive programming
+Reactive programmeren is een ontwikkelingsmodel gestructureerd rond asynchrone datastreams. Reactive Extensions, ofte Rx, is de API die het meeste gebruikt wordt om reactive te programmeren. In de client wordt er gebruik gemaakt van de RxJS, de Rx library voor javascript.
+
+######Observables, Observers en Operators:
+Rx is opgebouwd rond het gedachtegoed van het Observable Pattern, het Iterator Pattern en Functional Programming.
+De belangrijkste  van Observables en Observers. Observers kunnen zich abonneren (*subscriben*) op een Observable. Wanneer Observables datastreams de wereld insturen, zullen de geabonneerde Observers luisteren naar en reageren op de datastreams. De kracht van Rx zit in het feit dat de API de client toegang geeft tot verschillende Operators. Deze operators zorgen ervoor dat we datastreams kunnen transformeren, combineren, manipuleren, enzovoort… (Bhuvan, 2018).
+
+Rx wordt in het project gebruikt om op een vlotte en asynchrone manier dataflow tussen de verschillende componenten, services, directives, enzovoort… te voorzien. De belangrijkste plek waar Rx gebruikt wordt, is bij de communicatie tussen de client en de backend.
+De web API maakt gebruik van Swashbuckle om een swagger file te generen. In de client wordt er gebruik gemaakt van de ng-swagger-gen library om services aan te maken die de effectieve REST calls naar de web API gaan uitvoeren. Alle methodes in de gegenereerde services retourneren Observables. De data die de client toont moet altijd de meest recente zijn die in de databank aanwezig is. Daarom steekt er een service als buffer tussen de slimme component die de data nodig heeft, en de service die de calls naar de web API maakt. De werking van zo een bufferservice wordt in de volgende paragraaf uitgelegd, met een voorbeeld uit dit project.
+
+![Rx uitleg](../../img/rx_uitleg.png)
+
+Op het beheerscherm voor de medewerkers kan de beheerder een lijst van medewerkers raadplegen en de details van elke medewerker te zien krijgen. Op deze lijst van medewerkers kunnen er CRUD-operaties worden uitgevoerd.
+De buffer service heeft een Observable property genaamd employees. Employees heeft als type een lijst van medewerkers. Employees wordt gecreëerd door combineLatest, een van de methodes van Rx. CombineLatest verwacht als parameters meerdere Observables, in dit geval refreshSubject en filterSubject. Subjects zijn objecten die zowel Observable als Observer zijn.
+Zodra een van de twee Subjects een nieuwe waarde emit, zal employees door combineLatest zijn ook zijn waarde *emitten* uitzenden. De Rx operator, mergeMap, wordt toegepast op combineLatest om ervoor te zorgen dat de waarde die employees zal *emitten* de lijst van medewerkers is. 
+MergeMap spreekt de methode uit de gegenereerde service aan, die de GET-request naar de web API doet voor de lijst van medewerkers. MergeMap zorgt er ook voor dat employees de Observable, die geretourneerd wordt door de GET methode van de gegenereerde service, wordt toegewezen.
+Wanneer de client een CRUD-operatie wil uitvoeren op de lijst van medewerkers, wordt ervoor gezorgd dat refreshSubject een waarde uitzendt (deze waarde mag altijd null zijn). Aangezien refreshSubject een nieuwe waarde emit, wordt de functie van mergeMap terug opgeroepen.
+Zo bevat employees altijd de meeste recente lijst van medewerkers.
+
+###### Subscriben en Unsubscriben in Angular
+Een Observer moet subscriben op een Observable om toegang te krijgen tot de waardes die de Observable emit. Een Observable emit alleen maar waardes als een Observer op hem gesubscribed is.
+Wanneer er in een directive of een component gesubscribed wordt op een Observable, moet ervoor gezorgd worden dat de Observer unsubscribed als de directive of component vernietigd wordt. Gebeurt dit niet, kunnen er geheugenlekken optreden in de applicatie.
+
+Angular en Rx hebben manieren die het subscriben en unsubscriben kunnen versoepelen.
+Angular heeft de ingebouwde async pipe. De async pipe kan gebruikt worden om de data uit een Observable als deze meegegeven wordt in een HTML-template. De async pipe zorgt ervoor dat het subscriben en unsubscriben automatisch wordt afgehandeld.
+Rx heeft verschillende operators die het subscriben en unsubscriben afhandelen.
+Menselijke fouten worden vermeden wanneer er gebruik wordt gemaakt van deze methoden.
 
 ### ng-swagger-gen {#ngswagger}
 
-Er werd eerder uitgelegd dat er met Swagger gewerkt wordt in de backend. De werking van swagger hangt af van de generatie van een appsettings.json bestand, welke dan ook gebruikt kan worden om in verschillende frontend frameworks een bijpassende API service te genereren in de bijhorende syntax. Voor de angular client is er gebruik gemaakt van ng-swagger-gen, het modernste (gemikt op Angular 6.0+) bibliotheek dat er kon gevonden worden. [^7] Hier is vervolgens een script voor geschreven om het nodige proces van generatie te automatiseren en aan package.json toegevoegd. Dit zorgt er dan voor dat bij elke verandering in het backend API, alleen dit script moet geactiveerd worden om de bijhorende services te genereren. In de continuous integration pipeline naar de online ontwikkelingsomgeving kan het aanroepen van dit script geautomatiseerd worden.
+Er werd eerder uitgelegd dat er met Swagger gewerkt wordt in de backend. De werking van swagger hangt af van de generatie van een appsettings.json bestand, welke dan ook gebruikt kan worden om in verschillende frontend frameworks een bijpassende API service te genereren in de bijhorende syntax. Voor de angular client is er gebruik gemaakt van ng-swagger-gen, het modernste (gemikt op Angular 6.0+) bibliotheek dat er kon gevonden worden. [^9] Hier is vervolgens een script voor geschreven om het nodige proces van generatie te automatiseren en aan package.json toegevoegd. Dit zorgt er dan voor dat bij elke verandering in het backend API, alleen dit script moet geactiveerd worden om de bijhorende services te genereren. In de continuous integration pipeline naar de online ontwikkelingsomgeving kan het aanroepen van dit script geautomatiseerd worden.
 
 De gegenereerde services kunnen dan in ieder stuk van de angular client geïmporteerd en gebruikt worden; echter zou dit snel onoverzichtelijk worden aangezien dit één grote service is. Zelf zijn er telkens data services geschreven per module van de client die als tussenstap functioneren en de observables construeren en exporteren.
 
@@ -564,4 +624,6 @@ De opbouw van de heatmap gebeurt met behulp van de d3.js library. D3.js is een j
 [^4] http://konpa.github.io/devicon/
 [^5] https://api.slack.com/methods/im.open
 [^6] https://github.com/App-vNext/Polly
-[^7] https://github.com/cyclosproject/ng-swagger-gen
+[^7]: *Tree shaking* is een term die, in de context van JavaScript, gebruikt wordt om het elimineren van dode code te beschrijven. Ongebruikte modules worden tijdens het buildproces niet gebundeld door *tree shaking* (Bachuk, 2017).
+[^8]: De services die gegeneerd worden door Swagger zorgen ervoor dat de client calls kan doen naar de backend.
+[^9] https://github.com/cyclosproject/ng-swagger-gen
