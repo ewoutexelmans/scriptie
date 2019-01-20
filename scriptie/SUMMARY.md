@@ -1,9 +1,8 @@
-# Summary
-
+# Inhoudstafel
 * [Titelblad](./README.md)
-* Woord vooraf
-* Samenvatting
-* Inleiding
+* [Woord Vooraf](woord_vooraf/README.md)
+* [Samenvatting](samenvatting/README.md)
+* [Inleiding](inleiding/README.md)
 * [Project Management](corpus/project_management/README.md)
   * [Agile Ontwikkeling](corpus/project_management/README.md#agile_ontwikkeling)
   * [Source Controle](corpus/project_management/README.md#source_controle)
@@ -24,7 +23,6 @@
 * [Testen](corpus/testen/README.md)
   * [Integratietesten](corpus/testen/README.md#integratietesten)
     * [Integratietesten Client](corpus/testen/README.md#integratietesten_client)
-* Besluit
+* [Besluit](besluit/README.md)
 * [Bibliografie](bibliografie/README.md)
-* Bijlagen
-  
+* [Bijlages](bijlages/README.md)
