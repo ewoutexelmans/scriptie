@@ -63,24 +63,42 @@ Angular heeft de ingebouwde async pipe. De async pipe kan gebruikt worden om de 
 Rx heeft verschillende operators die het subscriben en unsubscriben afhandelen.
 Menselijke fouten worden vermeden wanneer er gebruik wordt gemaakt van deze methoden.
 
-## Continue Integratie {#continue_integratie}
-Azure pipelines yml files
-Continue integratie en continue deployment
+# Azure pipelines
+Azure pipelines is een onderdeel van Azure devops.
 Azure pipelines is een tool dat gebruikt wordt om te helpen bij continue integratie en continue deployment.
-Voor continue integratie maken we gebruik van de build pipeline. De build pipeline detecteert wanneer er veranderingen zijn aangebracht op de branches van onze repository. De configuratie van de build pipeline wordt beschreven in yml files.
-De yml file die zich bevindt in de root folder van de repository vertelt de build pipeline wanneer de build pipeline getriggerd moet worden. Het project heeft dus één build pipeline die automatisch wordt uitgevoerd zodra er een commit wordt gepusht naar een van de branches, die beschreven staat in de yml file, in de repository. Ook bevat deze een verwijzing naar andere yml files die dan weer beschrijven welke projecten moeten worden gebuild en getest.
-De bestanden, die gegenereerd worden door het buildproces, worden gekopieerd naar een zogenaamd artifact. Deze artifacts worden gebruikt door de release pipeline.
-In de build pipeline worden ook de unittests automatisch uitgevoerd.
-Wanneer zowel het builden als de test geslaagd zijn, gaat de release pipeline van start.
-De release pipeline staat in voor de continue deployment van de applicatie. Het project heeft twee release pipelines. Artifacts die gegenereerd worden door alle branches, buiten de master branch, triggeren de eerste pipeline. Artifacts die gegeneerd worde door de master branch triggeren de tweede pipeline.
-Aan een release pipeline kunnen variabelen worden vastgehangen. Omdat deze variabelen niet in de source controle terechtkomen, kunnen de release variabelen gebruikt worden om gevoelige informatie te bewaren.
-In het geval van het Angular project zorgen we ervoor dat de environment variabelen, die applicatie gebruikt in de productie omgeving, vervangen worden door de juiste release variabelen. Dit gebeurt met behulp van een powershell script.
-In het geval van .NET Core, kan de release pipeline automatisch de variabelen die zich bevinden in de appsettings.json files vervangen. In dat geval moet de naam van de release variabele voldoen aan de correcte benaming.
-De eerste release pipeline zorgt ervoor dat de applicatie automatisch gedeployed wordt naar de test servers.
-De tweede release pipeline zorgt ervoor dat de applicatie automatisch gedeployed wordt naar de acceptatie server. De tweede release pipeline kan de applicatie ook deployen naar de productieserver. Dit moet echter manueel getriggerd worden.
-Beide release pipelines zorgen ervoor dat de migraties die nodig zijn, worden uitgevoerd op de respectievelijke databanken.
-Nadat de applicatie gedeployed is op de testservers, worden er clientside integratietesten uitgevoerd
+## Continue Integratie {#continue_integratie}
+Voor de implementatie van de continue integratie wordt er gebruik gemaakt van de build pipeline. Het project heeft één build pipeline.
+
+De build pipeline wordt geconfigureerd met behulp van yml files die mee in de source controle worden ingecheckt. De yml file die zich bevindt in de root folder van de repository vertelt de build pipeline wanneer hij getriggerd moet worden. De build pipeline creëert zo automatisch een nieuwe build, zodra er een commit wordt gepusht naar een van de branches die beschreven staat in de root yml file.
+De root yml file bevat verwijzingen naar andere yml files die zich in de root folders bevinden van de verschillende frontend- en backend projecten.
+
+De yml files die zich bevinden in de folders van de projecten, hebben drie taken:
+1. Ze zorgen ervoor dat de build pipeline de juiste projecten build.
+2. Ze zorgen ervoor dat de bestanden, die gegenereerd worden tijdens het buildproces, gebundeld worden. Deze bundel wordt gezipt in een zogenaamd artifact.
+3. Ze zorgen ervoor dat de unit testen worden uitgevoerd als het builden geslaagd is.
+
+Wanneer deze drie stappen geslaagd zijn, begint automatisch de de continue implementatie.
+
 ## Continue Implementatie {#continue_implementatie}
+De release pipelines staan in voor de continue implementatie.
+
+Het project heeft twee release pipelines. De eerste pipeline zorgt voor implementatie op de test omgeving. Deze pipeline gaat van start wanneer het builden en testen van een feature- of bugfix branch geslaagd is. De andere pipeline zorgt voor de implementatie op de acceptatie- en release omgeving. Deze pipeline gaat van start wanneer het builden en testen van de master branch geslaagd is.
+
+De pipelines downloaden de artifacts die gecreëerd werden in de build pipeline.
+Beide pipelines voeren vervolgens dire taken uit, om de release te doen slagen:
+1. De variabelen die afhankelijk zijn van de specifieke omgeving worden gedeclareerd. Dit zijn bijvoorbeeld de connectionstrings voor de databanken, of de URL's van de API's.
+2. De migraties worden uitgevoerd op de databanken.
+3. De client-, api en scheduler applications worden gedeployed.
+
+Aan een release pipeline kunnen variabelen worden vastgehangen. Omdat deze variabelen niet in de source controle terechtkomen, kunnen de release variabelen gebruikt worden om gevoelige informatie te bewaren.
+In het geval van het Angular project zorgen we ervoor dat de environment variabelen, die applicatie gebruikt in de productie omgeving, vervangen worden met behulp van een powershell script.
+In het geval van .NET Core, kan de release pipeline automatisch de variabelen die zich bevinden in de appsettings.json files vervangen. In dat geval moet de naam van de release variabele gelijk zijn aan het adres van de variabele in de appsettings.json file.
+
+De eerste release pipeline zorgt ervoor dat de applicatie automatisch gedeployed wordt naar de test omgeving op Azure.
+De tweede release pipeline zorgt ervoor dat de applicatie automatisch gedeployed wordt naar de acceptatie omgeving. De tweede release pipeline kan de applicatie ook deployen naar de productieserver. Dit moet echter manueel getriggerd worden.
+
+Als het deployen naar de testomgeving geslaagd is, kunnen er client-side integratietesten op worden uitgevoerd. Op dit moment kan dit echter nog niet automatisch via de release pipeline.
+
 ## Persistence {#persistence}
 Fluent migrations
 De migraties van de databank worden uitgevoerd met behulp van Fluent Migrator. Fluent Migrator is een framework ontwikkeld voor .NET en .NET Core. Het staat toe om, op een gestructureerde en heldere manier, database schema’s aan te passen en te creëren. De migraties worden beschreven in klasses, geschreven in C#.
