@@ -1,7 +1,0 @@
-# Woord Vooraf
-
-## Elwin
-
-Ik heb persoonlijk voor dit project gekozen omdat ik met het vak Cloud Applications een full-stack .NET + Angular applicatie heb kunnen mee ontwikkelen, en dat over het algemeen het meest interessante project vond dat ik heb gedaan tijdens mijn opleiding Elektronica-ICT. Bij de aanvang van de opleiding twijfelde ik nog over welk gebied in de technologie wereld ik het meeste interesse had, en mijzelf een boeiende en vruchtvolle carrière in zach opbouwen. Ik was ook niet zeker of software development iets voor mij was, een domein dat vrij intimiderend overkwam met zijn eindeloze complexiteit en mogelijkheden. Het werken aan de 'QuestionApp' samen met andere studenten heeft mij een zekere houvast gegeven in die wereld en zelfzekerheid bijgebracht over mijn mogelijkheden als programmeur. Het gekozen bedrijf vond ik na een goed initieel gesprek goed passen bij mijn eigen waardes en attitude. Ik wou dan ook heel graag mijn bachelorproef bij hen uitvoeren en hopelijk zo veel mogelijk bijleren over ontwikkeling in een enterprise omgeving, 'echte' projecten voor 'echte' gebruikers. 
-
-Met dank aan Robin Vercammen als uitstekende stagementor en Jan Rauter voor het mogen participeren in de bedrijfsevenementen van Involved.

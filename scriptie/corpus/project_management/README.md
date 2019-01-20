@@ -36,11 +36,8 @@ Tijdens de sprintplanning wordt er bepaald welke user stories de komende week wo
 Dit is een gedetailleerde beschrijving van het source controle systeem toegepast in dit project.
 
 Voor elke user story die gepland is in een sprint wordt er een branch gecreëerd met het formaat: feature/(nummer en naam van de user story).
-
 Commits die gebeuren op de feature branches gebeuren moeten in hun message een nummer meekrijgen. Deze nummers komen overeen met de taken van een user story.
-
 Voor elke branch wordt er een pull request gecreëerd. De stagaires en stagementor reviewen de code in de pull request. Wanneer de user story afgewerkt is, en de code is gecontroleerd en goedgekeurd op zijn kwaliteit, kan de pull request gemerged worden.
-
 Voor het mergen worden alle commits op de branch gesquashed tot één commit.
 Dit zorgt ervoor dat elke feature als één commit op de master branch terechtkomt
 
@@ -74,7 +71,6 @@ In het geval van .NET Core, kan de release pipeline automatisch de variabelen di
 
 De eerste release pipeline zorgt ervoor dat de applicatie automatisch gedeployed wordt naar de test omgeving op Azure.
 De tweede release pipeline zorgt ervoor dat de applicatie automatisch gedeployed wordt naar de acceptatie omgeving. De tweede release pipeline kan de applicatie ook deployen naar de productieserver. Dit moet echter manueel getriggerd worden.
-
 Als het deployen naar de testomgeving geslaagd is, kunnen er client-side integratietesten op worden uitgevoerd. Op dit moment kan dit echter nog niet automatisch via de release pipeline.
 
 ## Lokale Ontwikkelingsomgeving {#lokale_ontwikkelingsomgeving}
