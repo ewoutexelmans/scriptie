@@ -11,6 +11,7 @@
   * [Continue Implementatie](corpus/project_management/README.md#continue_implementatie)
   * [Persistence](corpus/project_management/README.md#persistence)
   * [Lokale Ontwikkelingsomgeving](corpus/project_management/README.md#lokale_ontwikkelingsomgeving)
+* [Design](corpus/design/README.md)
 * [Ontwikkeling](corpus/ontwikkeling/README.md)
   * Gebruikservaring
   * [Authenticatie en Autorisatie](corpus/ontwikkeling/README.md#auth)
