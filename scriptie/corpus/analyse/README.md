@@ -57,7 +57,7 @@ Verder zal er als oplossing om overzicht en structuur te behouden in de verschil
  
 **Design**: er is op basis van de initieel opgestelde requirements en user stories een eerste domain model mock opgesteld, hieronder afgebeeld, waaruit ontwikkeling zal beginnen. Echter is deze ver van finaal daar er een agile development werkwijze van kracht is, en er kan verwacht worden dat de benodigdheden en vorm van de domain models tijdens de duur van het project vaak zullen veranderen. Om ons te assisteren met deze eisen van een vaak veranderende en evoluerende database zullen we **FluentMigrator** gebruiken in de applicatie. FluentMigrator is een .NET bibliotheek dat ons toelaat om onze database schema op een constructieve en vlotte manier te initialiseren in de applicatie zelf met C# syntax en aan te passen waar nodig, in plaats van kostbare ontwikkelingstijd te verliezen met het (her)schrijven van meerdere SQL scripts die iedere keer moeten uitgevoerd worden per ontwikkelingsomgeving. De keuze om niet Code-First te werken en zodus de migraties van Entity Framework zelf te gebruiken is gedreven door het *Separation of Concerns* principe: aangezien we vanuit een domain-driven design perspectief werken, houden we de zaken domein en database gescheiden door ze apart te implementeren.
  
-![Tweede versie Database Model Mock](../../../Documentatie/DatabaseModel&#32;Mockv2.png)
+![Tweede versie Database Model Mock](../../img/DatabaseModelMockv2.png)
 
 *Fig. 1: Tweede versie database model mock*
  
