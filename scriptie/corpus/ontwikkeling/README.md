@@ -369,7 +369,7 @@ var employees = await _context.Employees.Where(e => e.IsActive == true &&
                                                     e.Location.StartsWith(location))
                                             .ToListAsync(cancellationToken);
 ```
-                                                
+                                          
 ### Beschikbare technologieën & icons {#icons}
 
 Er moet een mogelijkheid voorzien worden om een technologie toe te voegen in het technology component van de client, met een bijhorende icoon. Volgens de requirement moet dit niet noodzakelijk het 'juiste' icoon zijn, een administrator heeft de mogelijkheid om zelf een technologienaam in te vullen en zelf een icoon te kiezen (dus indien gewenst, kan men 'Angular' typen en C++ icoon selecteren). Tot dit doeleinde is er een provider voor iconen gekozen, te bezichtigen op [^4], welke gerendeerd zullen worden in de client applicatie. In de backend voorzien we een nieuw model en databank tabel 'TechnologyIcon' welke de beschreven class bij de provider bijhoudt als property. Hier werd dan een domein handler voor toegevoegd om alle TechnologyIcon records in een lijst door te sturen, en een API service GetAllIcons op TechnologyController om deze aan te spreken vanuit de client. Tenslotte voegen we bij het Technology entity 'icon' ook toe als property, en in zijn constructor is vanaf nu een string "icon" vereist om een nieuwe technologie aan te maken, wat ook nog een kleine aanpassing in het bijhorende domein handler CreateTechnology vereist.
@@ -426,17 +426,24 @@ Er zijn een aantal belangrijke refactorings toegevoegd in deze stap, mede om con
 * Er werden voordien door de SlackClient rechtstreeks uit het domein replies naar de werknemers verstuurd, eigenlijk een schending van Separation of Concerns. Dit is verplaatst naar de Slack Handlers in het API project, en de domein handlers geven nu de nodige informatie (antwoordtekst, succes?) mee in een response, wat dan op API niveau wordt teruggestuurd via SlackClient.
 
 ### Refactoring Vragen en Antwoorden {#qna}
+Tijdens de ontwikkeling van de Slackbot werd er op het volgende probleem gestuit.
 
-Open question qna rounds
-De Slackbot is in staat om open vragen te stellen via een direct message aan alle medewerkers. Dankzij de Events API kunnen we ervoor zorgen dat Slack de antwoorden doorstuurt naar de backend van de applicatie. Dit veroorzaakt een echter een probleem: Slack zal een request sturen naar de backend, elke keer iemand een direct message stuurt naar de bot.
-Er moet dus voor gezorgd worden de backend enkel de direct messages van de medewerkers verwerkt wanneer er effectief een vraag is gesteld door de bot. Ook moet ervoor gezorgd worden dat de bot reageert op een direct message van een medewerker wanneer er geen vraag gesteld is of wanneer de medewerker al een antwoord heeft gegeven. Het is beter voor de gebruikservaring dat de bot elke input van een medewerker erkent. Zo kan er geen verwarring ontstaan over het feit of de bot al dan niet beschikbaar is, en waartoe de bot in staat is.
+De Slackbot is in staat om open vragen te stellen via een direct message aan alle medewerkers. Dankzij de Events API kunnen we ervoor zorgen dat Slack de antwoorden doorstuurt naar de backend van de applicatie. Dit veroorzaakt echter een probleem: Slack zal een request sturen naar de backend, telkens wanneer iemand een direct message stuurt naar de bot.
+
+Er moet dus voor gezorgd worden dat backend enkel de direct messages van de medewerkers verwerkt wanneer er effectief een vraag is gesteld door de bot. Ook moet ervoor gezorgd worden dat de bot reageert op een direct message van een medewerker wanneer er geen vraag gesteld is of wanneer de medewerker al een antwoord heeft gegeven. Het is beter voor de gebruikservaring dat de bot elke input van een medewerker erkent. Zo kan er geen verwarring ontstaan over het feit of de bot al dan niet beschikbaar is, en waartoe de bot in staat is.
+
 Als oplossing voor dit probleem is er een ronde systeem geïntroduceerd in de applicatie.
 QnaRound is een entiteit die informatie bevat over het onderwerp van de vraag die moet gesteld worden tijdens de ronde, de vraag die effectief gesteld is tijdens de ronde en of de ronde al dan niet nog actief is.
+
 De scheduler is verantwoordelijk voor het starten van een nieuwe ronde. Wanneer het tijd is om de medewerkers te bevragen over een nieuw onderwerp, stuurt de scheduler een request naar de business logica om een nieuwe ronde te creëren. Een ronde moet een onderwerp meekrijgen. Dit onderwerp kan bijvoorbeeld de werkplaats of een vaardigheid zijn. Aan de hand van het onderwerp van de ronde wordt dan bepaald welke vraag er overeenkomt met dat onderwerp.
 Bij het creëren van een nieuwe ronde, wordt de nieuwe ronde als actief beschouwd en wordt de vorige ronde op non-actief gezet. Zo zal er altijd slechts één ronde actief zijn.
+
 Zodra het creëren van een nieuwe ronde geslaagd is, stuurt de scheduler een request om de ronde-vraag te stellen.
-De API heeft nu een manier om te bepalen hoe een direct message event moet worden afgehandeld. 
-De flow ziet eruit als volgt.
+
+De API heeft nu een manier om te bepalen hoe een direct message event moet worden afgehandeld.
+
+De flow ziet er dus uit als volgt.
+
 De Slack Events API stuurt een request naar de Slack controller van de web API. De web API controleert het type van de request (de twee verwachte types zijn url_verification en event_callback). Als het gaat om een direct message request, wordt er een service aangesproken die de direct message kan afhandelen. De web API stuurt twee requests naar de business logica. Een om informatie te verschaffen over de actieve ronde, en een tweede om te bepalen of de medewerker die de request getriggerd heeft, al dan niet geantwoord heeft op de vraag van de huidige ronde. Als de medewerker al heeft geantwoord heeft, of er geen ronde actief is, wordt er via de bot een bericht gestuurd naar de medewerker dat er op dit moment geen vragen zijn die beantwoord kunnen worden. Wanneer er wel een ronde actief is, én de medewerker nog geen antwoord heeft gegeven op de vraag van die ronde, wordt de request afgehandeld naargelang het onderwerp van de ronde.
 
 ### Categorizatie beantwoorde technologieën {#categorizetech}
@@ -510,7 +517,8 @@ Er werd eerder uitgelegd dat er met Swagger gewerkt wordt in de backend. De werk
 De gegenereerde services kunnen dan in ieder stuk van de angular client geïmporteerd en gebruikt worden; echter zou dit snel onoverzichtelijk worden aangezien dit één grote service is. Zelf zijn er telkens data services geschreven per module van de client die als tussenstap functioneren en de observables construeren en exporteren.
 
 ### Technologieën {#technologie}
-Technologies module
+Featuremodule voor technologieën
+
 De client heeft een pagina voor het beheer van de technologieën en vaardigheden die de medewerkers kunnen bezitten.
 De pagina heeft een overzicht met alle technologieën die de beheerder relevant vindt voor het bedrijf. Vanuit deze pagina kan de beheerder nieuwe technologieën toevoegen, oude technologieën updaten en irrelevante technologieën verwijderen. Per technologie kan de beheerder bekijken welke werknemers er vaardig zijn in de technologie.
  
@@ -529,19 +537,25 @@ De translate service heeft een methode om de lijst van beschikbare talen te verk
 
 Er is in de backend een service voorzien die werknemers op locatie kan filteren. Bij het initieel laden van de werknemers wordt diezelfde service gebruikt met een lege query welke dan de volledige lijst werknemers teruggeeft. In de client applicatie voorzien we een filter controle in de 'employee' module welke bij gebruik deze service met een query ingevoerd in het tekstvak gebruikt. De implementatie van deze filter heeft aanvankelijk plaats plaatsgevonden met het gebruik van ng-select, een UI select component dat ook standaard autocomplete ondersteunt. Deze filter kan in een html-pagina geplaatst worden en ingevuld met een data stream uit een Observable. Deze data kunnen we ophalen in de reeds aangemaakte web service van het BrainChain API welke alle (unieke) locaties van de actieve werknemers voor een bedrijf doorstuurt. Deze data werd opgevangen in de data service van het employee module en beschikbaar gemaakt in een Observable, welke in het gebruik van de ng-select filter werd meegegeven.
 
-### Refactoring Filter {#newfilter}
+### Refactoring Filter, Filter op basis van een algemeen keyword {#newfilter}
+ 
+In latere versie is de filter herwerkt om ervoor te zorgen dat hij kan filteren op eender welke input van de gebruiker.
 
-Later in het ontwikkelingsproces is er de beslissing gemaakt om bijkomend ook op naam te kunnen filteren.
-De filter is een domme component, die bestaat uit een enkel tekstveld. Wanneer de tekst in het tekstveld verandert, wordt het input event afgevuurd. De component bevat een subject, een speciaal type van observable. De waarde van het subject wordt de waarde van het tekstveld, telkens wanneer het input event wordt afgevuurd.
+Deze filter is een domme component, die bestaat uit een enkel tekstveld. Wanneer de tekst in het tekstveld verandert, wordt het input event afgevuurd. De component bevat een subject, een speciaal type van observable. De waarde van het subject wordt de waarde van het tekstveld, telkens wanneer het input event wordt afgevuurd.
+
 De filtercomponent heeft als output een observable die de waarde van het subject publiceert, zolang deze waarde een halve seconde onveranderd is gebleven én de waarde verschillend is van de vorige gepubliceerde waarde. Dit zorgt ervoor dat, als een gebruiker in het tekstveld aan het typen is, de waarde niet verandert met elke toetsaanslag. Zo wordt er enkel een request voor gefilterde data gestuurd wanneer de gebruiker even niet meer getypt heeft.
-Een bovenliggende slimme component luistert naar het outputevent van de filtercomponent. De waarde die gebruiker intypte in het tekstveld is het keyword dat als parameter wordt gestuurd naar het filter subject in de dataservice. Aangezien een subject een soort observable is, kunnen we een functie creëren die een call doet naar de backend wanneer de waarde van het subject geüpdatet wordt.
+
+Een bovenliggende slimme component luistert naar het outputevent van de filtercomponent. De waarde die gebruiker intypte in het tekstveld is het keyword dat als parameter wordt gestuurd naar het filter subject in de dataservice. Aangezien een subject een soort observable is, kunnen we een functie creëren die een call doet naar de backend wanneer de waarde van het subject geüpdatet wordt.      
 
 ### Heatmap {#heatmap}
-Heatmap
 De heatmap is een visuele weergave van het aantal vaardigheden die de medewerkers van een bedrijf hebben.
+
 De beheerder moet in een oogopslag kunnen zien met welke vaardigheden de medewerkers overweg kunnen. De heatmap wordt daarom weergegeven als een bubble chart. Elke cirkel komt overeen met een specifieke vaardigheid. Hoe groter de cirkel, hoe meer medewerkers aangeven dat ze ervaring hebben met die vaardigheid. De cirkels krijgen als titel de naam van de vaardigheid mee, en als ondertitel het aantal medewerkers die bekwaam zijn in die vaardigheid.
+
 Om ervoor te zorgen dat de cirkels op een intuïtieve manier te vergelijken zijn, is er wiskunde nodig. Wanneer de ene vaardigheid dubbel zoveel medewerkers bevat als de andere, moet de oppervlakte van de ene cirkel dubbel zo groot zijn als de andere. Als de straal of de diameter van de ene cirkel dubbel zo groot zou zijn als de andere, merkt een menselijk oog gauw op dat de kleine cirkel niet juist twee keer in de grote past. Als er een één op één relatie zou zijn tussen de straal en het aantal vaardigheden, zou, bij een verdubbeling in vaardigheden, de cirkel vier keer zo groot lijken.
+
 De relatie tussen de vaardigheden en de medewerkers is een veel op veel relatie. In de backend kan er met een eenvoudige query het aantal medewerkers per vaardigheid worden opgehaald. De client ontvangt de naam en het aantal in een DTO.
+
 De opbouw van de heatmap gebeurt met behulp van de d3.js library. D3.js is een javascript library die documenten manipuleert op basis van data. We creëren een service, waarin d3 de heatmap gaat opbouwen. De service bouwt met de ontvangen data SVG-elementen op; voor elke vaardigheid een. Het DOM-element waar de heatmap moet in getoond worden krijgt als id: “charts” mee. Wanneer de we de methode van de heatmap service oproepen in een component, vult d3 het DOM-element met de juiste id op met de gecreëerde SVG-cirkels. De cirkels zijn gesorteerd op willekeurige volgorde en krijgen een willekeurige kleur.
 
 [^1] https://crontab.guru/
