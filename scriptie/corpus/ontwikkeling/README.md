@@ -16,44 +16,58 @@ Om data te verkrijgen van medewerkers van het bedrijf hebben is er een Slack app
 
 Slack laat zijn gebruikers toe om applicatie toe te voegen aan de workspace. Zo kan men de functionaliteit van een workspace uitbreiden en veranderen.
 In de Slack applicatie is er een bot user gebundeld. Deze bot zorgt ervoor dat medewerkers via conversaties kunnen interageren met de Slack app.
-De Slack maakt gebruik van twee Slack API’s om interacties met medewerkers af te handelen, de Events API en de Conversations API.
-Events API
+De Slack app maakt gebruik van twee Slack API’s om interacties met medewerkers af te handelen, de Events API en de Conversations API.
+
+### Events API
 De Events API zorgt ervoor dat een Slack app zich kan abonneren op events die gebeuren in Slack. In de Slack app geven we een request URL mee.
-Om te verifiëren of deze URL geldig is stuurt Slack POST request met als type: url_verification en een willekeurige challenge string. Om de verificatie te voltooien moet de web API met een OK-response antwoorden, met een response body die de challenge string bevat.
+Om te verifiëren of deze URL geldig is stuurt Slack POST request met als type: url_verification en een willekeurige challenge string. Om de verificatie te voltooien moet de web API met een OK-response antwoorden, met een response body die de challenge string bevat. (Slack Api, s.d.)
+
 Wanneer er een event gebeurt waarop we geabonneerd zijn, stuurt Slack een POST request naar de URL. De requests zijn JSON requests. De request URL komt overeen met een methode in de Slack controller van de web API. Slack verwacht dat er binnen de drie seconden gereageerd wordt met een 2XX response code. Lukt dit niet, zal de Events API maximaal drie keer proberen om de request naar de request-URL te sturen. Het is dus belangrijk dat de web API zo snel mogelijk antwoord op een request. Hierom moet er zoveel mogelijk vermeden worden dat het verwerken van een event en het beantwoorden op een event in hetzelfde proces gebeuren.
 De Slack app kan zich op twee verschillende soorten events abonneren., Workspace Events en Bot Events.
+
 Workspace Events zijn alle soorten events die kunnen plaatsnemen in een Slack Workspace. Deze events zijn echter niet relevant voor deze applicatie.
+
 Bot Events zijn alle events die gerelateerd zijn aan kanalen en conversaties waar de bot deel van uitmaakt. Het enige event waarop de Slack app geabonneerd is, is het Bot Event: message.im. Dit event ontstaat wanneer er een bericht wordt gestuurd in een direct message kanaal, waar de bot deel van uitmaakt.
+
 De web API checkt het type van de request die gestuurd is naar de request URL, om te weten of de request al dan niet verwerkt moet worden. De API is enkel in staat om requests met als type: url_verification (zoals hierboven geschreven wordt dit gebruikt om de request URL te verifiëren), en requests die een event hebben met als channel type: im (dit toont aan dat het event afkomstig is van een direct message channel), te verwerken. Als de controller een request ontvangt dat niet verwerkt kan worden, zal de methode een exception throwen.
-Conversations API
+
+De manieren waarop de requests worden afgehandeld, komt in andere secties van de scriptie aan bod.
+
 ## Beheerdersprofiel {#admin}
-Choose language
 Bij het injecteren van de translate service in de Appcomponent geven we mee voor welke talen we een json file hebben aangemaakt. Als standaardtaal gebruikt de client Engels.
+
 De client checkt of de taalcode in de browser overeenkomt met een van de talen die beschikbaar zijn (bijvoorbeeld: nl voor Nederlands). Zo ja wordt die taal gebruikt voor de lokalisatie, zo nee wordt Engels gebruikt.
 De translate service heeft een methode om de lijst van beschikbare talen te verkrijgen. Deze lijst wordt in de header weergegeven, zodat een gebruiker op die manier de taal kan aanpassen.
+
 ## Medewerkers {#medewerker}
-CSV Upload
+### CSV Upload
 De gebruiker van de client applicatie moet op een gemakkelijke manier alle medewerkers van zijn bedrijf kunnen toevoegen. Daarom is er een optie voorzien in het beheerscherm van de medewerkers om een CSV-bestand te uploaden.
+
 Dit bestand wordt met een request in een POST request doorgestuurd naar de web API. In de backend wordt het bestand met behulp van de .NET library CsvHelper omgezet naar een lijst van medewerkers. CsvHelper heeft een methode om data in een CSV-bestand lijn per lijn uit te lezen en te mappen naar een DTO, onder voorwaarde dat de titel van elke kolom gelijk is aan de property’s van de DTO. Is dit niet het geval, wordt er een foutmelding gegenereerd dat de kolommen in het bestand niet voldoen aan de verwachte property’s.
+
 De lijst van DTO’s gegenereerd door de service wordt vervolgens gevalideerd. Ieder item in de lijst wordt gecontroleerd of het voldoet aan de voorwaarden die nodig zijn om een medewerker aan te maken (bijvoorbeeld de naam mag geen lege string zijn). Als er zich ergens in het bestand foute data bevindt, zal de gebruiker een foutmelding krijgen met het adres van de foute data (rijnummer en kolomnaam).
+
 Slechts als de lijst gevalideerd is zal er een request worden gemaakt om een lijst van medewerkers te creëren in de databank.
 
-Filter
-De nieuwe filter moet ervoor zorgen dat er gefilterd kan worden op 
+### Filter
+De nieuwe filter moet ervoor zorgen dat er gefilterd kan worden op de naam en de locatie van een employee.
+
 De filter is een domme component, die bestaat uit een enkel tekstveld. Wanneer de tekst in het tekstveld verandert, wordt het input event afgevuurd. De component bevat een subject, een speciaal type van observable. De waarde van het subject wordt de waarde van het tekstveld, telkens wanneer het input event wordt afgevuurd.
+
 De filtercomponent heeft als output een observable die de waarde van het subject publiceert, zolang deze waarde een halve seconde onveranderd is gebleven én de waarde verschillend is van de vorige gepubliceerde waarde. Dit zorgt ervoor dat, als een gebruiker in het tekstveld aan het typen is, de waarde niet verandert met elke toetsaanslag. Zo wordt er enkel een request voor gefilterde data gestuurd wanneer de gebruiker even niet meer getypt heeft.
+
 Een bovenliggende slimme component luistert naar het outputevent van de filtercomponent. De waarde die gebruiker intypte in het tekstveld is het keyword dat als parameter wordt gestuurd naar het filter subject in de dataservice. Aangezien een subject een soort observable is, kunnen we een functie creëren die een call doet naar de backend wanneer de waarde van het subject geüpdatet wordt.
 
 
 ## Technologieën {#technologie}
-Technologies module
+
 De client heeft een pagina voor het beheer van de technologieën en vaardigheden die de medewerkers kunnen bezitten.
 De pagina heeft een overzicht met alle technologieën die de beheerder relevant vindt voor het bedrijf. Vanuit deze pagina kan de beheerder nieuwe technologieën toevoegen, oude technologieën updaten en irrelevante technologieën verwijderen. Per technologie kan de beheerder bekijken welke werknemers er vaardig zijn in de technologie.
 
 ## Vragen en Antwoorden {#qna}
-Open question qna rounds
+
 De Slackbot is in staat om open vragen te stellen via een direct message aan alle medewerkers. Dankzij de Events API kunnen we ervoor zorgen dat Slack de antwoorden doorstuurt naar de backend van de applicatie. Dit veroorzaakt een echter een probleem: Slack zal een request sturen naar de backend, elke keer iemand een direct message stuurt naar de bot.
-Er moet dus voor gezorgd worden de backend enkel de direct messages van de medewerkers verwerkt wanneer er effectief een vraag is gesteld door de bot. Ook moet ervoor gezorgd worden dat de bot reageert op een direct message van een medewerker wanneer er geen vraag gesteld is of wanneer de medewerker al een antwoord heeft gegeven. Het is beter voor de gebruikservaring dat de bot elke input van een medewerker erkent. Zo kan er geen verwarring ontstaan over het feit of de bot al dan niet beschikbaar is, en waartoe de bot in staat is.
+Er moet dus voor gezorgd worden dat backend enkel de direct messages van de medewerkers verwerkt wanneer er effectief een vraag is gesteld door de bot. Ook moet ervoor gezorgd worden dat de bot reageert op een direct message van een medewerker wanneer er geen vraag gesteld is of wanneer de medewerker al een antwoord heeft gegeven. Het is beter voor de gebruikservaring dat de bot elke input van een medewerker erkent. Zo kan er geen verwarring ontstaan over het feit of de bot al dan niet beschikbaar is, en waartoe de bot in staat is.
 Als oplossing voor dit probleem is er een ronde systeem geïntroduceerd in de applicatie.
 QnaRound is een entiteit die informatie bevat over het onderwerp van de vraag die moet gesteld worden tijdens de ronde, de vraag die effectief gesteld is tijdens de ronde en of de ronde al dan niet nog actief is.
 De scheduler is verantwoordelijk voor het starten van een nieuwe ronde. Wanneer het tijd is om de medewerkers te bevragen over een nieuw onderwerp, stuurt de scheduler een request naar de business logica om een nieuwe ronde te creëren. Een ronde moet een onderwerp meekrijgen. Dit onderwerp kan bijvoorbeeld de werkplaats of een vaardigheid zijn. Aan de hand van het onderwerp van de ronde wordt dan bepaald welke vraag er overeenkomt met dat onderwerp.
