@@ -1,14 +1,19 @@
 # Ontwikkeling
 ## Authenticatie en Autorisatie {#auth}
-Autorisatie en authenticatie met auth0
 Authenticatie en autorisatie in onze applicatie wordt afgehandeld door auth0. Auth0 is een management platform voor authenticatie en autorisatie. Via het online platform wordt de autorisatie van de applicatie en de gebruikers geconfigureerd. Vanuit de applicatie zelf kan de configuratie aangepast worden met behulp van de management API van auth0.
-Gebruikers worden geauthenticeerd met de universele login van auth0. Wanneer gebruikers een authenticatie request triggeren worden ze doorverwezen naar de universele login pagina van auth0. Deze pagina wordt enkel gebruikt voor inloggen en authenticatie, en toont het lock widget van auth0. Andere logica is niet beschikbaar op deze pagina. De hoofdreden waarom er gebruik gemaakt wordt van universele login, is veiligheid. De universele login zorgt ervoor dat de applicatie geen gebruik maakt van cross-origin authenticatie. Cross-origin authenticatie is in se gevaarlijker en heeft een grotere kans om het slachtoffer te zijn van, onder andere, een man-in-the-middle aanval.
+
+Gebruikers worden geauthenticeerd met de universele login van auth0. Wanneer gebruikers een authenticatie request triggeren worden ze doorverwezen naar de universele login pagina van auth0. Deze pagina wordt enkel gebruikt voor inloggen en authenticatie, en toont het lock widget van auth0. Andere logica is niet beschikbaar op deze pagina.
+De hoofdreden waarom er gebruik gemaakt wordt van universele login, is veiligheid. De universele login zorgt ervoor dat de applicatie geen gebruik maakt van cross-origin authenticatie. Cross-origin authenticatie is in se gevaarlijker en heeft een grotere kans om het slachtoffer te zijn van, onder andere, een man-in-the-middle aanval (Auth0 Documentatie, s.d.).
+
 Wanneer de authenticatie geslaagd is, wordt het access token en de datum en tijd wanneer het token vervalt, ontvangen van auth0, opgeslagen in de browser cache via de localStorage tool van Angular. Deze tokens vervallen na tien uur.
+
 De routes in de client side van de applicatie worden beschermd door de authGuard service. De service kijkt of er zich een accestoken bevindt in de local storage, en of dit token nog niet vervallen is. Zo ja, wordt de gebruiker weer doorverwezen naar de login pagina. Aangezien er maar één soort gebruiker toegang heeft tot de client side van de applicatie, namelijk de beheerder, heeft een geauthenticeerde gebruiker toegang tot alle pagina’s van de website.
-In de backend van de applicatie worden alle controllers, buiten de Slack controller, in de API beschermd door autorisatie. Er kunnen dus geen ongeautoriseerde calls gemaakt worden vanuit de client. Calls die worden gemaakt vanuit de frontend worden in de client onderschept door een HttpInterceptor. Deze service zorgt ervoor dat het accestoken als bearer token wordt meegegeven aan de header van de call, alvorens ze naar de backend worden gestuurd. De backend checkt dan met behulp van de authorization API van auth0 of de gebruiker deze call mag maken. In de huidige iteratie van de applicatie, heeft een geauthenticeerde gebruiker toegang tot alle methodes van elke controller, buiten de Slack controller.
+
+In de backend van de applicatie worden alle controllers, buiten de Slack controller, in de API beschermd door autorisatie. Er kunnen dus geen ongeautoriseerde calls gemaakt worden vanuit de client. Calls die worden gemaakt vanuit de frontend worden in de client onderschept door een HttpInterceptor. Deze service zorgt ervoor dat het accestoken als bearer token wordt meegegeven aan de header van de call, alvorens ze naar de backend worden gestuurd. De backend checkt dan met behulp van de Authorization API van auth0 of de gebruiker deze call mag maken. In de huidige iteratie van het project, heeft een geauthenticeerde gebruiker toegang tot alle methodes van elke controller, buiten de Slack controller.
+
 ## Slack Integratie {#slack}
-Slack integration
-Om data te verkrijgen van medewerkers van het bedrijf hebben we een Slack applicatie gebouwd.
+Om data te verkrijgen van medewerkers van het bedrijf hebben is er een Slack applicatie gecreëerd als onderdeel van het project.
+
 Slack laat zijn gebruikers toe om applicatie toe te voegen aan de workspace. Zo kan men de functionaliteit van een workspace uitbreiden en veranderen.
 In de Slack applicatie is er een bot user gebundeld. Deze bot zorgt ervoor dat medewerkers via conversaties kunnen interageren met de Slack app.
 De Slack maakt gebruik van twee Slack API’s om interacties met medewerkers af te handelen, de Events API en de Conversations API.

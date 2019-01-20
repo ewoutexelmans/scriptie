@@ -100,6 +100,7 @@ De tweede release pipeline zorgt ervoor dat de applicatie automatisch gedeployed
 Als het deployen naar de testomgeving geslaagd is, kunnen er client-side integratietesten op worden uitgevoerd. Op dit moment kan dit echter nog niet automatisch via de release pipeline.
 
 ## Persistence {#persistence}
+
 Fluent migrations
 De migraties van de databank worden uitgevoerd met behulp van Fluent Migrator. Fluent Migrator is een framework ontwikkeld voor .NET en .NET Core. Het staat toe om, op een gestructureerde en heldere manier, database schema’s aan te passen en te creëren. De migraties worden beschreven in klasses, geschreven in C#.
 Er zijn twee redenen waarom de voorkeur uit ging naar Fluent Migrator boven de Code First Migrations van Entity Framework zelf. 
