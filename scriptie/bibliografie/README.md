@@ -3,3 +3,4 @@
 * Angular Docs. *Style Guide*. Opgevraagd op 14 januari 2019 van https://angular.io/guide/styleguide
 * Arnold, J. (2017). *Dumb Components and Smart Components*. Opgevraagd op 4 januari 2019 van https://medium.com/@thejasonfile/dumb-components-and-smart-components-e7b33a698d43
 * Bachuk, A. (2017). *What is tree shaking?*. Opgevraagd op 3 januari 2019 van https://medium.com/@netxm/what-is-tree-shaking-de7c6be5cadd
+* Bhuvan, M. (2018). *An introduction to functional Reactive programming in Redux*. Opgevraagd op 6 januari 2019 van https://medium.freecodecamp.org/an-introduction-to-functional-reactive-programming-in-redux-b0c14d097836
