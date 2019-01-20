@@ -617,12 +617,12 @@ De relatie tussen de vaardigheden en de medewerkers is een veel op veel relatie.
 
 De opbouw van de heatmap gebeurt met behulp van de d3.js library. D3.js is een javascript library die documenten manipuleert op basis van data. We creëren een service, waarin d3 de heatmap gaat opbouwen. De service bouwt met de ontvangen data SVG-elementen op; voor elke vaardigheid een. Het DOM-element waar de heatmap moet in getoond worden krijgt als id: “charts” mee. Wanneer de we de methode van de heatmap service oproepen in een component, vult d3 het DOM-element met de juiste id op met de gecreëerde SVG-cirkels. De cirkels zijn gesorteerd op willekeurige volgorde en krijgen een willekeurige kleur.
 
-[^1] https://crontab.guru/
-[^2] https://api.slack.com/methods/chat.postMessage
-[^3] https://api.slack.com/docs/message-buttons
-[^4] http://konpa.github.io/devicon/
-[^5] https://api.slack.com/methods/im.open
-[^6] https://github.com/App-vNext/Polly
+[^1]: https://crontab.guru/
+[^2]: https://api.slack.com/methods/chat.postMessage
+[^3]: https://api.slack.com/docs/message-buttons
+[^4]: http://konpa.github.io/devicon/
+[^5]: https://api.slack.com/methods/im.open
+[^6]: https://github.com/App-vNext/Polly
 [^7]: *Tree shaking* is een term die, in de context van JavaScript, gebruikt wordt om het elimineren van dode code te beschrijven. Ongebruikte modules worden tijdens het buildproces niet gebundeld door *tree shaking* (Bachuk, 2017).
 [^8]: De services die gegeneerd worden door Swagger zorgen ervoor dat de client calls kan doen naar de backend.
-[^9] https://github.com/cyclosproject/ng-swagger-gen
+[^9]: https://github.com/cyclosproject/ng-swagger-gen
