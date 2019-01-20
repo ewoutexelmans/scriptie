@@ -73,10 +73,9 @@ In het geval van het Angular project zorgen we ervoor dat de environment variabe
 In het geval van .NET Core, kan de release pipeline automatisch de variabelen die zich bevinden in de appsettings.json files vervangen. In dat geval moet de naam van de release variabele gelijk zijn aan het adres van de variabele in de appsettings.json file.
 
 De eerste release pipeline zorgt ervoor dat de applicatie automatisch gedeployed wordt naar de test omgeving op Azure.
-De tweede release pipeline zorgt ervoor dat de applicatie automatisch gedeployed wordt naar de acceptatie omgeving. De tweede release pipeline kan de applicatie ook deployen naar de productieserver. Dit moet echter manueel getriggerd worden.
+De tweede release pipeline zorgt ervoor dat de applicatie automatisch gedeployed wordt naar de acceptatie omgeving. De tweede release pipeline kan de applicatie ook deployen naar de productieserver. Dit moet echter manueel getriggered worden.
 
 Als het deployen naar de testomgeving geslaagd is, kunnen er client-side integratietesten op worden uitgevoerd. Op dit moment kan dit echter nog niet automatisch via de release pipeline.
-
 ## Lokale Ontwikkelingsomgeving {#lokale_ontwikkelingsomgeving}
 Als er nieuwe ontwikkelaars aan het project beginnen werken, moet ervoor gezorgd worden dat zij op een vlotte manier kunnen start.
 Daarom zijn er enkele scripts gecreëerd die helpen bij het opzetten van de lokale ontwikkelingsomgeving.
