@@ -2,7 +2,7 @@
 
 Bij het evolueren van de applicatie is er vrij vlug een nood ontstaan voor een robuust test framework. Logica welke een tastbaar resultaat geeft zoals validatie en berekeningen kunnen vrij eenvoudig in **unit tests** automatisch getest worden. Er moet altijd zekerheid bestaan dat deze cruciale stukken functionaliteit het verwachte resultaat kunnen opleveren. Anderzijds wordt het bij het groeien van de applicatie ook altijd arbeidsintensiever om manueel features af te gaan en te bekijken of alles nog naar verwachting werkt. Aangezien dit in principe bij het ontwikkelen van elke nieuwe feature moet gedaan worden, wordt dit vlug een tijdrovende bezigheid. Tot het automatiseren van dit proces kunnen we **integratie tests** gebruiken. Er moet ook gezorgd worden dat dit op een constructieve manier wordt toegevoegd aan het project, wat wilt zeggen dat de tests per project opgedeeld worden in een nieuw, bijhorend test project.
 
-## FluentAssertions
+## FluentAssertions {#fluent}
 
 In het algemeen is er zoveel mogelijk gebruik gemaakt van zelf-beschrijvende tests. Vanuit een design perspectief is er zoveel mogelijk uit het principe gewerkt dat tests ook als documentatie moeten kunnen dienen. Neem bijvoorbeeld het valideren van een email input. Bij het ingeven van een lege email moet dit een 'Invalid' respons teruggeven. Dan wordt er bij de benaming van klasse en methode geschreven:
 
@@ -39,13 +39,13 @@ ok.Should().BeTrue();
 
 Bij het eerste voorbeeld moet men toch een moment nemen om te begrijpen wat de beschreven verwachting juist is, terwijl bij het FluentAssertions voorbeeld dit in menselijkere taal vlugger overkomt.
 
-## Unit Tests
+## Unit Tests {#unit}
   
-### API
+### API {#unitapi}
 
 De eerste reeks unit tests zijn geschreven voor de reeks formulier validaties welke gebruikt worden aan het API einde. Dit zijn eenvoudige unit tests die met FluentAssertions asserteren of de juiste boolean wordt teruggegeven bij de input van een bepaalde string. Bijvoorbeeld, bij het valideren van een email moet bij het toesturen van een simpele string met geen formattering False geasserteerd worden.
 
-### Domein
+### Domein {#domein}
 
 In het domein kunnen de entiteitsrelaties getest worden, aangezien dit tijdens runtime in principe op volledig programmatisch niveau gebeurd. Er is doorheen de ontwikkeling van de applicatie zoveel mogelijk van deze interacties op niveau van domein gehouden om deze testbaarheid te verhogen (wanneer een entiteit in een databank query wordt gecontroleerd of veranderd, wordt het veel complexer om een test uit te voeren op deze functionaliteit door de nood voor een databank mock). Dus in plaats van te controleren op de IsActive flag van employees bij de database query, is er een extra verzameling 'EmployedEmployees' toegevoegd onder Company om deze check volledig op domein niveau te houden en bijgevolg testbaarder te maken.
 
@@ -60,7 +60,7 @@ Het instellen van dit automatisch testen is bereikt door de implementatie van ee
 ## Integratietesten {#integratietesten}
 Integratie testen zijn testen die worden uitgevoerd om de samenwerking tussen verschillende modules te testen. Verschillende modules van de software worden samengenomen en in hun geheel getest. In het test proces worden deze testen uitgevoerd na de unit tests. 
 
-### API Integration Tests
+### API  {#integratieapi}
  
 Er zijn in de backend voor het API ook integratie tests voorzien, welke functionaliteit op de API controllers vanuit een breder perspectief van een volwaardige API consumer kunnen controleren. Om dit te bereiken diende een soort van mock gemaakt te worden voor een API client. Hier is als eerste stap NSwag gebruikt, een tool vergelijkbaar met ng-swagger-gen dat ook clients voor gebruik in .NET Core kan generen uit het swagger.json bestand. Hier is ook een script voor geschreven om elke keer bij het aanpassen van een API controller gemakkelijker een nieuwe client te genereren. Echter kan deze gegenereerde client niet meteen gebruikt worden, aangezien er een geldig Auth0 token nodig is om met de API te mogen communiceren. Er is tot dit doeleinde middleware geschreven, 'AuthorizedClientFactory', welke bij elke integratie test een voor-geautoriseerde client kan produceren. Dit stuk middleware post eerst een verzoek naar het Auth0 domein en vraagt zo een token aan, en voegt deze token toe in de headers van een nieuw httpClient, welke vervolgens als basis dient voor een nieuwe instantie van de klasse die nswag heeft gegenereerd. Dit maakt op een zeer praktische manier op verzoek voorgeautoriseerde clients beschikbaar die met het API mogen communiceren.
 
