@@ -66,23 +66,34 @@ De pagina heeft een overzicht met alle technologieën die de beheerder relevant 
 
 ## Vragen en Antwoorden {#qna}
 
-De Slackbot is in staat om open vragen te stellen via een direct message aan alle medewerkers. Dankzij de Events API kunnen we ervoor zorgen dat Slack de antwoorden doorstuurt naar de backend van de applicatie. Dit veroorzaakt een echter een probleem: Slack zal een request sturen naar de backend, elke keer iemand een direct message stuurt naar de bot.
+De Slackbot is in staat om open vragen te stellen via een direct message aan alle medewerkers. Dankzij de Events API kunnen we ervoor zorgen dat Slack de antwoorden doorstuurt naar de backend van de applicatie. Dit veroorzaakt echter een probleem: Slack zal een request sturen naar de backend, telkens wanneer iemand een direct message stuurt naar de bot.
+
 Er moet dus voor gezorgd worden dat backend enkel de direct messages van de medewerkers verwerkt wanneer er effectief een vraag is gesteld door de bot. Ook moet ervoor gezorgd worden dat de bot reageert op een direct message van een medewerker wanneer er geen vraag gesteld is of wanneer de medewerker al een antwoord heeft gegeven. Het is beter voor de gebruikservaring dat de bot elke input van een medewerker erkent. Zo kan er geen verwarring ontstaan over het feit of de bot al dan niet beschikbaar is, en waartoe de bot in staat is.
+
 Als oplossing voor dit probleem is er een ronde systeem geïntroduceerd in de applicatie.
 QnaRound is een entiteit die informatie bevat over het onderwerp van de vraag die moet gesteld worden tijdens de ronde, de vraag die effectief gesteld is tijdens de ronde en of de ronde al dan niet nog actief is.
+
 De scheduler is verantwoordelijk voor het starten van een nieuwe ronde. Wanneer het tijd is om de medewerkers te bevragen over een nieuw onderwerp, stuurt de scheduler een request naar de business logica om een nieuwe ronde te creëren. Een ronde moet een onderwerp meekrijgen. Dit onderwerp kan bijvoorbeeld de werkplaats of een vaardigheid zijn. Aan de hand van het onderwerp van de ronde wordt dan bepaald welke vraag er overeenkomt met dat onderwerp.
 Bij het creëren van een nieuwe ronde, wordt de nieuwe ronde als actief beschouwd en wordt de vorige ronde op non-actief gezet. Zo zal er altijd slechts één ronde actief zijn.
+
 Zodra het creëren van een nieuwe ronde geslaagd is, stuurt de scheduler een request om de ronde-vraag te stellen.
-De API heeft nu een manier om te bepalen hoe een direct message event moet worden afgehandeld. 
-De flow ziet eruit als volgt.
+
+De API heeft nu een manier om te bepalen hoe een direct message event moet worden afgehandeld.
+
+De flow ziet er dus uit als volgt.
+
 De Slack Events API stuurt een request naar de Slack controller van de web API. De web API controleert het type van de request (de twee verwachte types zijn url_verification en event_callback). Als het gaat om een direct message request, wordt er een service aangesproken die de direct message kan afhandelen. De web API stuurt twee requests naar de business logica. Een om informatie te verschaffen over de actieve ronde, en een tweede om te bepalen of de medewerker die de request getriggerd heeft, al dan niet geantwoord heeft op de vraag van de huidige ronde. Als de medewerker al heeft geantwoord heeft, of er geen ronde actief is, wordt er via de bot een bericht gestuurd naar de medewerker dat er op dit moment geen vragen zijn die beantwoord kunnen worden. Wanneer er wel een ronde actief is, én de medewerker nog geen antwoord heeft gegeven op de vraag van die ronde, wordt de request afgehandeld naargelang het onderwerp van de ronde.
 
  
 ## Heatmap {#heatmap}
-Heatmap
+
 De heatmap is een visuele weergave van het aantal vaardigheden die de medewerkers van een bedrijf hebben.
+
 De beheerder moet in een oogopslag kunnen zien met welke vaardigheden de medewerkers overweg kunnen. De heatmap wordt daarom weergegeven als een bubble chart. Elke cirkel komt overeen met een specifieke vaardigheid. Hoe groter de cirkel, hoe meer medewerkers aangeven dat ze ervaring hebben met die vaardigheid. De cirkels krijgen als titel de naam van de vaardigheid mee, en als ondertitel het aantal medewerkers die bekwaam zijn in die vaardigheid.
+
 Om ervoor te zorgen dat de cirkels op een intuïtieve manier te vergelijken zijn, is er wiskunde nodig. Wanneer de ene vaardigheid dubbel zoveel medewerkers bevat als de andere, moet de oppervlakte van de ene cirkel dubbel zo groot zijn als de andere. Als de straal of de diameter van de ene cirkel dubbel zo groot zou zijn als de andere, merkt een menselijk oog gauw op dat de kleine cirkel niet juist twee keer in de grote past. Als er een één op één relatie zou zijn tussen de straal en het aantal vaardigheden, zou, bij een verdubbeling in vaardigheden, de cirkel vier keer zo groot lijken.
+
 De relatie tussen de vaardigheden en de medewerkers is een veel op veel relatie. In de backend kan er met een eenvoudige query het aantal medewerkers per vaardigheid worden opgehaald. De client ontvangt de naam en het aantal in een DTO.
+
 De opbouw van de heatmap gebeurt met behulp van de d3.js library. D3.js is een javascript library die documenten manipuleert op basis van data. We creëren een service, waarin d3 de heatmap gaat opbouwen. De service bouwt met de ontvangen data SVG-elementen op; voor elke vaardigheid een. Het DOM-element waar de heatmap moet in getoond worden krijgt als id: “charts” mee. Wanneer de we de methode van de heatmap service oproepen in een component, vult d3 het DOM-element met de juiste id op met de gecreëerde SVG-cirkels. De cirkels zijn gesorteerd op willekeurige volgorde en krijgen een willekeurige kleur.
 
