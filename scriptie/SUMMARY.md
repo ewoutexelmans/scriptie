@@ -1,7 +1,5 @@
 # Inhoudstafel
-* [Titelblad](./README.md)
-* [Woord Vooraf](woord_vooraf/README.md)
-* [Samenvatting](samenvatting/README.md)
+* [Woord Vooraf](./README.md)
 * [Inleiding](inleiding/README.md)
 * [Project Management](corpus/project_management/README.md)
   * [Agile Ontwikkeling](corpus/project_management/README.md#agile_ontwikkeling)
@@ -19,7 +17,6 @@
   * [Requirements](corpus/analyse/README.md#req)
 * [Ontwikkeling](corpus/ontwikkeling/README.md)
   * [Architectuur](corpus/ontwikkeling/README.md#arch)
-  * Gebruikservaring
   * [Authenticatie en Autorisatie](corpus/ontwikkeling/README.md#auth)
   * [Backend](corpus/ontwikkeling/README.md#backend)
     * [Domein & Database Config](corpus/ontwikkeling/README.md#domain)
