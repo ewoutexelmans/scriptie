@@ -143,7 +143,9 @@ Vrijwel alle functionaliteiten gekoppeld aan de backend en de ‘client’-appli
  
 Voor het publiceren van de aangemaakte API endpoints, is er gebruik gemaakt van Swagger. Dit is kort samengevat een open-source framework beschikbaar op veel platforms welke automatisch RESTful web services kan documenteren en zelfs bijhorende frontend code genereren voor consumptie. De .NET Core implementatie dat is gekozen voor dit project is Swashbuckle, welke alleen diende toegevoegd te worden als een service, en erna een swagger.json bestand genereert gebaseerd op de code in onze controllers. Uit dit json bestand wordt dan een HTML pagina met documentatie en testmogelijkheden aangemaakt welke op het adres van ons backend toegankelijk is. Dit ziet er in het finale product zo uit voor de employee controller:
 
-![Screenshot van swagger documentatie](../Documentatie/EmployeeApiSwagger.png)
+![Screenshot van swagger documentatie](../../../Documentatie/EmployeeApiSwagger.png)
+
+*Fig. 2 Gegenereerde swagger documentatie van Employee Controller*
 
 Verder kan er dan ook frontend code gegenereerd worden uit deze swagger.json bestand. Deze werking zal later toegelicht worden.
 
@@ -232,7 +234,9 @@ Hier valt op te merken:
 
 Het Hangfire dashboard in de huidige acceptatie omgeving ziet deze job er als volgt uit:
 
-![Screenshot hangfire dashboard](../Documentatie/Hangfire.png)
+![Screenshot hangfire dashboard](../../../Documentatie/Hangfire.png)
+
+*Fig 3. Hangfire dashboard van de scheduler op acceptatie*
 
 Wanneer deze job dan getriggerd wordt, gebeurt de invocatie van de geassocieerde domein handler. Deze bevat logica om eerst alle werknemers van het bedrijf uit de database te halen, en vervolgens ze allemaal iteratief een bericht te sturen via een vraag. Deze berichten sturen gebeurt via een zelfgeschreven 'SlackClient', een klasse die we beschikbaar stellen als injecteerbare interface ISlackClient die http calls naar het Slack API beschikbaar stelt. De gebruikte httpClient in SlackClient is voorgeconfigureerd in Startup.cs met het autorisatie token om met de relevante workspace slackbot te kunnen verbinden (opgeslagen in appsettings.json), om communicatie mogelijk te maken via de chatbot.
 
