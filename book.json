@@ -1,3 +1,4 @@
 {
-  "root": "./scriptie"
+  "root": "./scriptie",
+  "language": "nl"
 }

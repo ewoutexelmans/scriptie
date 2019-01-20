@@ -1,4 +1,4 @@
 _book/
 Voorbereiding/
 node_modules/
-
+**/*.pdf
